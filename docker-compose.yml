@@ -1,0 +1,44 @@
+version: '3.3'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      args:
+        port: 3000
+    image: hackatum/backend:dev
+    volumes:
+      - "./backend:/usr/app:rw"
+    ports:
+      - "127.0.0.1:3000:3000"
+    #restart: always
+    user: ${CURRENT_UID}
+    networks:
+      - internet_sim
+      
+  backend_frontend:
+    build:
+      context: ./backend_frontend
+      args:
+        port: 5000
+    image: hackatum/backend_frontend:dev
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+     - "./backend_frontend:/usr/app:rw"
+    user: ${CURRENT_UID}
+    networks:
+      - internet_sim
+      
+  car:
+    image: nginx
+    volumes:
+     - "./car:/usr/share/nginx/html"
+    ports:
+     - "80:80"
+    environment:
+     - NGINX_PORT=80
+
+
+networks:
+  internet_sim:
