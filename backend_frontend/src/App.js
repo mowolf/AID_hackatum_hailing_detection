@@ -1,5 +1,7 @@
 import React, { Component } from "react";
-import styled from 'styled-components'
+import styled from "styled-components";
+import { connect } from "react-redux";
+import { test } from "./actions";
 
 const Background = styled.div`
   background-color: #ecf0f1;
@@ -8,16 +10,30 @@ const Background = styled.div`
   left: 0;
   bottom: 0;
   right: 0;
-`
+`;
 
 class App extends Component {
+
+  onChange = e => {
+    this.props.test(e.target.value);
+  }
+
   render() {
-    return (
-      <Background>
-        Test
-      </Background>
-    );
+    const message = this.props.message;
+    return <Background>
+      <input onChange={this.onChange} value={message} />
+    {message}
+    </Background>;
   }
 }
 
-export default App;
+const mapStateToProps = state => {
+  return {
+    message: state.message
+  };
+};
+
+export default connect(
+  mapStateToProps,
+  { test }
+)(App);
