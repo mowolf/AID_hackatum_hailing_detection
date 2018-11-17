@@ -8,6 +8,7 @@ window=${session}:0
 tmux kill-session -t $session
 tmux new-session -d -s $session
 tmux split-window  -h -t $window
+tmux split-window  -t $window -p 66
 tmux split-window  -t $window -p 50
 
 uid=$(id -u)
@@ -17,11 +18,12 @@ tmux send-keys -t "${window}.0" "CURRENT_UID=${uid}:${gid} docker-compose up" En
 
 echo "Waiting until docker container come online"
 
-while [ -z $id_frontend ] || [ -z $id_backend ]; do
+while [ -z $id_frontend ] || [ -z $id_backend ] || [ -z $id_car ]; do
   sleep .5
 
   id_frontend=$(docker ps -q --filter=ancestor=hackatum/backend_frontend:dev | head -n 1)
   id_backend=$(docker ps -q --filter=ancestor=hackatum/backend:dev | head -n 1)
+  id_car=$(docker ps -q --filter=ancestor=hackatum/car:dev | head -n 1)
 
   printf "."
 done
@@ -30,5 +32,7 @@ tmux send-keys -t "${window}.1" "printf \"\x1b[38;5;125mFrontend\x1b[0m\n\"" Ent
 tmux send-keys -t "${window}.1" "docker exec -it --user 1000:1000 $id_frontend bash" Enter
 tmux send-keys -t "${window}.2" "printf \"\x1b[38;5;125mBackend\x1b[0m\n\"" Enter
 tmux send-keys -t "${window}.2" "docker exec -it $id_backend bash" Enter
+tmux send-keys -t "${window}.3" "printf \"\x1b[38;5;125mCar\x1b[0m\n\"" Enter
+tmux send-keys -t "${window}.3" "docker exec -it $id_car bash" Enter
 
 tmux attach -t $session
