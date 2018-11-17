@@ -75,11 +75,14 @@ http.listen(3000, function() {
 
 const checkWaitingPassengers = function() {
     if (state.waitingPassengers.length == 0) {
+        setTimeout(checkWaitingPassengers, 5000);
         return;
     }
 
     console.log("We have waiting customers...");
     console.log(state.waitingPassengers);
+
+    setTimeout(checkWaitingPassengers, 5000);
 };
 
-setInterval(checkWaitingPassengers, 5000);
+checkWaitingPassengers();

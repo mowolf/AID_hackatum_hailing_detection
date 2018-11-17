@@ -24,7 +24,7 @@ const Stats = styled.div`
   background-color: red;
   flex: 1;
   padding: 10px;
-`
+`;
 
 class App extends Component {
   onChange = e => {
@@ -38,9 +38,7 @@ class App extends Component {
         <MapWrapper>
           <Map />
         </MapWrapper>
-        <Stats>
-          Stats
-        </Stats>
+        <Stats>Stats</Stats>
       </Background>
     );
   }

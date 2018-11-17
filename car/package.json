@@ -15,7 +15,7 @@
   },
   "scripts": {
     "watch": "NODE_ENV=development parcel index.html --no-hmr --open ",
-    "build": "NODE_ENV=development parcel index.html --no-hmr --open ",
+    "build": "NODE_ENV=production parcel build index.html --no-minify --public-url ./",
     "build-camera": "NODE_ENV=production parcel build camera.html  --no-minify --public-url ./",
     "lint": "eslint ."
   },
