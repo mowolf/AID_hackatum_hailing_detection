@@ -12,8 +12,8 @@ const MakeCarStatus = require("./models/CarStatus.js");
 const MakeWaitingPassenger = require("./models/WaitingPassenger.js");
 
 const state = {
-  carStatuses: [],
-  waitingPassengers: []
+    carStatuses: [],
+    waitingPassengers: []
 };
 
 // Middleware
@@ -22,7 +22,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.get("/", function(req, res) {
-  res.send("Hello World!");
+    res.send("Hello World!");
 });
 
 app.get("/test", function(req, res) {
@@ -54,49 +54,49 @@ app.get("/test", function(req, res) {
 });
 
 app.post("/waitingPassenger", (req, res) => {
-  const passenger = MakeWaitingPassenger(req.body);
+    const passenger = MakeWaitingPassenger(req.body);
 
-  if (!passenger) {
-    res.send(500, "Malformed Passenger.. look up the docs");
-    return;
-  }
+    if (!passenger) {
+        res.send(500, "Malformed Passenger.. look up the docs");
+        return;
+    }
 
-  state.waitingPassengers.push(passenger);
-  res.sendStatus(200);
+    state.waitingPassengers.push(passenger);
+    res.sendStatus(200);
 });
 
 app.post("/status", (req, res) => {
-  const carStatus = MakeCarStatus(req.body);
+    const carStatus = MakeCarStatus(req.body);
 
-  if (!carStatus) {
-    res.send(500, "Malformed Car State Update...");
-    return;
-  }
+    if (!carStatus) {
+        res.send(500, "Malformed Car State Update...");
+        return;
+    }
 
-  state.carStatuses.push(carStatus);
-  res.sendStatus(200);
+    state.carStatuses.push(carStatus);
+    res.sendStatus(200);
 });
 
 // Websocketzeug
 
 io.on("connection", function(socket) {
-  console.log("A user connected");
+    console.log("A user connected");
 
-  setInterval(function() {
-    socket.emit("carStatuses", state.carStatuses);
-  }, 1000);
+    setInterval(function() {
+        socket.emit("carStatuses", state.carStatuses);
+    }, 1000);
 
-  setInterval(function() {
-    socket.emit("waitingPassengers", state.waitingPassengers);
-  }, 500);
+    setInterval(function() {
+        socket.emit("waitingPassengers", state.waitingPassengers);
+    }, 500);
 
-  socket.on("disconnect", function() {
-    console.log("A user disconnected");
-  });
+    socket.on("disconnect", function() {
+        console.log("A user disconnected");
+    });
 });
 
 http.listen(3000, function() {
-  console.log("websocket listening on 3000");
+    console.log("websocket listening on 3000");
 
   let newCarStatus = MakeCarStatus({
     carId: 0,
@@ -130,6 +130,9 @@ const tellCabToGetPassenger = function(cabId, passenger) {
   cab.state = "APPROACHING";
   passenger.cabId = cabId;
 
+    console.log("found cab to get passenger");
+    console.log(cabId + " should get " + passenger);
+
   console.log("found cab to get passenger");
   console.log(cabId + " should get " + passenger);
 
@@ -137,7 +140,9 @@ const tellCabToGetPassenger = function(cabId, passenger) {
 };
 
 const distanceBetweenPositions = function(posA, posB) {
+    // TODO: replace by API call to roadnav service or some other metric
   // TODO: replace by API call to roadnav service or some other metric
+    // TODO: replace by API call to roadnav service
 
   const deltaLat = posA.lat - posB.lat;
   const deltaLng = posA.lng - posB.lng;
@@ -202,6 +207,6 @@ const checkWaitingPassengers = function() {
   console.log("We have waiting customers...");
   console.log(state);
 
-  setTimeout(checkWaitingPassengers, 5000);
+    setTimeout(checkWaitingPassengers, 5000);
 };
 checkWaitingPassengers();
