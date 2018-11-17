@@ -24,16 +24,11 @@ app.get("/carStates", (req, res) => {
 io.on("connection", function(socket) {
     console.log("A user connected");
 
-    socket.send("hallo-socket");
-    socket.emit("carStates", state.carStates);
-
-    setTimeout(function() {
-        console.log("hallo");
-        socket.send("hallo-socket");
+    setInterval(function() {
         socket.emit("carStates", state.carStates);
     }, 1000);
 
-    setTimeout(function() {
+    setInterval(function() {
         socket.emit("waitingPassengers", state.waitingPassengers);
     }, 1000);
 
