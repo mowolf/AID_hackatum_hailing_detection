@@ -1,9 +1,9 @@
 module.exports = function(obj) {
-    if (obj && (!obj.carId || !obj.pos)) {
-        return null;
-    }
+    // if (obj && (!obj.carId || !obj.pos)) {
+    //     return null;
+    // }
 
-    obj = {};
+    // obj = {};
 
     return {
         carId: obj.carId || "",

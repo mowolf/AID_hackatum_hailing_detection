@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import styled from "styled-components";
-import { connect } from "react-redux";
-// import { init } from "./actions";
+
 import Map from "./Map";
 
 const Background = styled.div`
@@ -26,13 +25,12 @@ const Stats = styled.div`
   padding: 10px;
 `;
 
-class App extends Component {
+export default class App extends Component {
   onChange = e => {
     this.props.test(e.target.value);
   };
 
   render() {
-    const carStates = this.props.carStates;
     return (
       <Background>
         <MapWrapper>
@@ -44,13 +42,3 @@ class App extends Component {
   }
 }
 
-const mapStateToProps = state => {
-  return {
-    carStates: state.carStates
-  };
-};
-
-export default connect(
-  mapStateToProps,
-  {}
-)(App);

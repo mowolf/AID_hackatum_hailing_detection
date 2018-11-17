@@ -1,13 +1,14 @@
 import React, { Component } from "react";
-import { Map, TileLayer, Marker, Popup } from "react-leaflet";
+import { Map, TileLayer, Circle } from "react-leaflet";
 import Leaflet from "leaflet";
+import { connect } from "react-redux";
 import "leaflet/dist/leaflet.css";
-import "./leaflet.css"
+import "./leaflet.css";
 
 Leaflet.Icon.Default.imagePath =
   "//cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.4/images/";
 
-export default class MyMap extends Component {
+class MyMap extends Component {
   state = {
     lat: 48.1347975,
     lng: 11.5424506,
@@ -15,6 +16,7 @@ export default class MyMap extends Component {
   };
 
   render() {
+    const carStates = this.props.carStates;
     const position = [this.state.lat, this.state.lng];
     return (
       <Map center={position} zoom={this.state.zoom}>
@@ -22,12 +24,21 @@ export default class MyMap extends Component {
           attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <Marker position={position}>
-          <Popup>
-            A pretty CSS3 popup. <br /> Easily customizable.
-          </Popup>
-        </Marker>
+        {carStates.length && carStates.map(carState => {
+          return carState ? <Circle center={carState.pos} radius={100} opacity={1} fillOpacity={1} stroke={false} key={carState.carId} /> : null;
+        })}
       </Map>
     );
   }
 }
+
+const mapStateToProps = state => {
+  return {
+    carStates: state.carStates
+  };
+};
+
+export default connect(
+  mapStateToProps,
+  {}
+)(MyMap);
