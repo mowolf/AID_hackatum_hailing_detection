@@ -118,6 +118,7 @@ const tellCabToGetPassenger = function(cabId, passenger) {
     const targetPos = cab.pos;
 
     cab.state = "APPROACHING";
+    passenger.cabId = cabId;
 
     console.log("found cab to get passenger");
     console.log(cabId + " should get " + passenger);
@@ -135,15 +136,31 @@ const distanceBetweenPositions = function(posA, posB) {
 };
 
 const checkWaitingPassengers = function() {
-  if (state.waitingPassengers.length == 0) {
-    setTimeout(checkWaitingPassengers, 5000);
-    return;
-  }
+    let haveWaitingPassengers = false;
+
+    state.waitingPassengers.forEach(passenger => {
+        // Don't serve passengers that already have an associated cab
+        if (!passenger.cabId) {
+            haveWaitingPassengers = true;
+            return;
+        }
+    });
+
+    if (!haveWaitingPassengers) {
+        console.log("Everybody is being served...");
+        setTimeout(checkWaitingPassengers, 5000);
+        return;
+    }
 
     console.log("We have waiting customers...");
     console.log(state.waitingPassengers);
     // for passenger in waitingpassengers
     state.waitingPassengers.forEach(passenger => {
+        // Don't serve passengers that already have an associated cab
+        if (passenger.cabId) {
+            return;
+        }
+
         var minDist = Infinity;
         var bestCabId = -1;
 
