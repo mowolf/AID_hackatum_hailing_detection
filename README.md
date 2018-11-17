@@ -1,6 +1,6 @@
 ## HackaTUM 2018: Autonomous Intelligent Driving Challenge
-# AID-cab Project
-#### Swarm intelligence based taxi service with gesture recognition UI
+# Swarm intelligence based taxi service with gesture recognition UI
+## AID-cab
 
 This repository consists of the project that was developed during HackaTUM 2018.
 
@@ -9,7 +9,7 @@ This repository consists of the project that was developed during HackaTUM 2018.
 1. Install
 
 
-1. Clone Project
+2. Clone Project
 > `git clone https://github.com/mowolf/AID_hackatum_hailing_detection`
 
 1. Install tmux
