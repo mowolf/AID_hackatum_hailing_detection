@@ -48,6 +48,8 @@ app.post("/status", (req, res) => {
     res.sendStatus(200);
 });
 
+// Websocketzeug
+
 io.on("connection", function(socket) {
     console.log("A user connected");
 

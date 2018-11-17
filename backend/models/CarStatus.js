@@ -4,13 +4,13 @@ module.exports = function(obj) {
     }
 
     return {
-        carId: "",
-        pos: {
+        carId: obj.carId || "",
+        pos: obj.pos || {
             lat: 0.0,
             long: 0.0
         },
-        state: "FREE", // FREE, BUSY, CHARGING, ERROR, MAINTENANCE
-        change: 0.0,
-        batteryCharge: 1
+        state: obj.state || "FREE", // FREE, BUSY, CHARGING, ERROR, MAINTENANCE
+        change: obj.change || 0.0,
+        batteryCharge: obj.batteryCharge || 1
     };
 };
