@@ -4,11 +4,14 @@ const app = express();
 
 const http = require("http").Server(app);
 const io = require("socket.io")(http);
+const cors = require("cors");
 
 const state = {
     carStates: [],
     waitingPassengers: []
 };
+
+app.use(cors());
 
 app.get("/", function(req, res) {
     res.send("Hello World!");
@@ -21,11 +24,16 @@ app.get("/carStates", (req, res) => {
 io.on("connection", function(socket) {
     console.log("A user connected");
 
-    setInterval(function() {
+    socket.send("hallo-socket");
+    socket.emit("carStates", state.carStates);
+
+    setTimeout(function() {
+        console.log("hallo");
+        socket.send("hallo-socket");
         socket.emit("carStates", state.carStates);
     }, 1000);
 
-    setInterval(function() {
+    setTimeout(function() {
         socket.emit("waitingPassengers", state.waitingPassengers);
     }, 1000);
 
@@ -35,7 +43,7 @@ io.on("connection", function(socket) {
 });
 
 http.listen(3000, function() {
-    console.log("websocket listening on 3001");
+    console.log("websocket listening on 3000");
 
     const newCarState = MakeCarState();
     state.carStates.push(newCarState);
