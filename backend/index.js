@@ -82,6 +82,12 @@ app.post("/status", (req, res) => {
 io.on("connection", function(socket) {
     console.log("A user connected");
 
+    io.clients((error, clients) => {
+        if (error) throw error;
+        console.log("clients");
+        console.log(clients); // => [6em3d4TJP8Et9EMNAAAA, G5p55dHhGgUnLUctAAAB]
+    });
+
     setInterval(function() {
         socket.emit("carStatuses", state.carStatuses);
     }, 1000);
