@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 import styled from "styled-components";
 import CarStateTable from './CarStateTable';
 import DistanceTravelledPlot from './DistanceTravelledPlot';

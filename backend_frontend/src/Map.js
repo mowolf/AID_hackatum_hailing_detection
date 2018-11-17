@@ -26,7 +26,7 @@ class MyMap extends Component {
           url="https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}{r}.png"
         />
         {carStates.length &&
-          carStates.map(carState => {
+          carStates.map((carState, index) => {
             return carState ? (
               <CircleMarker
                 center={carState.pos}
@@ -34,7 +34,7 @@ class MyMap extends Component {
                 opacity={1}
                 fillOpacity={1}
                 stroke={false}
-                key={carState.carId}
+                key={"car_" + index}
                 fillColor={'#2980b9'}
               >
                 <Popup>
@@ -63,7 +63,7 @@ class MyMap extends Component {
                 opacity={1}
                 fillOpacity={1}
                 stroke={false}
-                key={index}
+                key={"passenger_" + index}
                 fillColor={'#e74c3c'}
               />
             ) : null;

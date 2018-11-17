@@ -170,11 +170,11 @@ const tellCabToGetPassenger = function(cabId, passenger) {
   passenger.cabId = cabId;
   cario.sockets.connected[cab.socket].emit("pickup", passenger);
 
-  // console.log("found cab to get passenger");
-  // console.log(cabId + " should get " + passenger);
+  console.log("found cab to get passenger");
+  console.log(cabId + " should get " + passenger);
 
-  // console.log("found cab to get passenger");
-  // console.log(cabId + " should get " + passenger);
+  console.log("found cab to get passenger");
+  console.log(cabId + " should get " + passenger);
 
   // TODO: Networking code to tell cab to go to targetPos
 };
