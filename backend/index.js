@@ -24,6 +24,34 @@ app.get("/", function(req, res) {
   res.send("Hello World!");
 });
 
+app.get("/test", function(req, res) {
+    console.log("###### test page triggered, adding test data...");
+
+    const passenger = MakeWaitingPassenger({
+        colorHist: 123,
+        pos: {
+            lat: 1.23,
+            long: 2.34
+        }
+    });
+
+    const taxi = MakeCarStatus({
+        carId: 666,
+        pos: {
+            lat: 3.33,
+            long: 4.44
+        },
+        state: "FREE", // FREE, BUSY, APPROACHING, CHARGING, ERROR, MAINTENANCE
+        change: 0.0,
+        batteryCharge: 1
+    });
+
+    state.waitingPassengers.push(passenger);
+    state.carStatuses.push(taxi);
+
+    res.send(state);
+});
+
 app.post("/waitingPassenger", (req, res) => {
   const passenger = MakeWaitingPassenger(req.body);
 
@@ -138,7 +166,7 @@ const checkWaitingPassengers = function() {
     });
 
     console.log("We have waiting customers...");
-    console.log(state.waitingPassengers);
+    console.log(state);
 
   setTimeout(checkWaitingPassengers, 5000);
 };
