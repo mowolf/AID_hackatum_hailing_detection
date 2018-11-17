@@ -25,6 +25,7 @@ const StatsWrapper = styled.div`
   background-color: #95a5a6;
   flex: 1;
   padding: 10px;
+  max-width: 50%;
 `;
 
 export default class App extends Component {

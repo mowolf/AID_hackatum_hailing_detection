@@ -6,12 +6,12 @@ module.exports = function(obj) {
     // obj = {};
 
     return {
-        carId: obj.carId || "",
+        carId: obj.carId === (undefined || null) ? 0 : obj.carId,
         pos: obj.pos || {
-            lat: 0.0,
-            long: 0.0
+            lat: 1.23,
+            long: 2.34
         },
-        state: obj.state || "FREE", // FREE, BUSY, CHARGING, ERROR, MAINTENANCE
+        state: obj.state || "FREE", // FREE, BUSY, APPROACHING, CHARGING, ERROR, MAINTENANCE
         change: obj.change || 0.0,
         batteryCharge: obj.batteryCharge || 1
     };

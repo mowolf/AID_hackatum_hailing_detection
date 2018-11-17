@@ -10,13 +10,14 @@ Leaflet.Icon.Default.imagePath =
 
 class MyMap extends Component {
   state = {
-    lat: 48.1347975,
-    lng: 11.5424506,
+    lat: 48.1288533,
+    lng: 11.5811703,
     zoom: 13
   };
 
   render() {
     const carStates = this.props.carStates;
+    const waitingPassengers = this.props.waitingPassengers;
     const position = [this.state.lat, this.state.lng];
     return (
       <Map center={position} zoom={this.state.zoom}>
@@ -34,6 +35,7 @@ class MyMap extends Component {
                 fillOpacity={1}
                 stroke={false}
                 key={carState.carId}
+                fillColor={'#2980b9'}
               >
                 <Popup>
                   <table>
@@ -52,6 +54,20 @@ class MyMap extends Component {
               </Circle>
             ) : null;
           })}
+          {waitingPassengers.length &&
+          waitingPassengers.map((waitingPassenger, index) => {
+            return waitingPassenger ? (
+              <Circle
+                center={waitingPassenger.pos}
+                radius={100}
+                opacity={1}
+                fillOpacity={1}
+                stroke={false}
+                key={index}
+                fillColor={'#e74c3c'}
+              />
+            ) : null;
+          })}
       </Map>
     );
   }
@@ -59,7 +75,8 @@ class MyMap extends Component {
 
 const mapStateToProps = state => {
   return {
-    carStates: state.carStates
+    carStates: state.carStates,
+    waitingPassengers: state.waitingPassengers
   };
 };
 

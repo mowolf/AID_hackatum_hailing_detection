@@ -5,6 +5,7 @@ module.exports = function(obj) {
 
     return {
         colorHist: obj.colorHist,
-        pos: obj.pos
+        pos: obj.pos,
+        cabId: false
     };
 };
