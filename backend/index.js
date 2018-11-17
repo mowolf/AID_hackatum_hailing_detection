@@ -159,6 +159,9 @@ const checkWaitingPassengers = function() {
             }
         });
 
+        console.log("min dist: " + minDist);
+        console.log("best car: " + bestCabId);
+
         // tell cab to get passenger
         if (bestCabId > -1) {
             tellCabToGetPassenger(bestCabId, passenger);
