@@ -15,7 +15,7 @@ services:
     user: ${CURRENT_UID}
     networks:
       - internet_sim
-      
+
   backend_frontend:
     build:
       context: ./backend_frontend
@@ -29,15 +29,21 @@ services:
     user: ${CURRENT_UID}
     networks:
       - internet_sim
-      
+
   car:
-    image: nginx
+    build:
+      context: ./car
+      #args:
+      #  port: 3000
+    image: hackatum/car:dev
     volumes:
-     - "./car:/usr/share/nginx/html"
+      - "./car:/usr/app:rw"
     ports:
-     - "80:80"
-    environment:
-     - NGINX_PORT=80
+      - "127.0.0.1:1234:1234"
+    #restart: always
+    user: ${CURRENT_UID}
+    networks:
+      - internet_sim
 
 
 networks:
