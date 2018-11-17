@@ -1,11 +1,37 @@
+const CarState = require("./models/CarState.js");
+const express = require("express");
+const app = express();
 
-var express = require('express');
-var app = express();
+const http = require("http").Server(app);
+const io = require("socket.io")(http);
 
-app.get('/', function (req, res) {
-  res.send('Hello World!');
+const state = {
+    carStates: [],
+    waitingPassengers: []
+};
+
+app.get("/", function(req, res) {
+    res.send("Hello World!");
 });
 
-app.listen(3000, function () {
-  console.log('Example app listening on port 3000!');
+app.get("/carStates", (req, res) => {
+    res.json(state.carStates);
+});
+
+io.on("connection", function(socket) {
+    console.log("A user connected");
+
+    //Send a message after a timeout of 4seconds
+    setInterval(function() {
+        socket.send("Sent a message 4seconds after connection!");
+    }, 4000);
+
+    socket.on("disconnect", function() {
+        console.log("A user disconnected");
+    });
+});
+
+app.listen(3000, function() {
+    state.carStates.push(CarState());
+    console.log("Example app listening on port 3000!");
 });
