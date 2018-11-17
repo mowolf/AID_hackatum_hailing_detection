@@ -1,9 +1,10 @@
-module.exports = function() {
+module.exports = function(obj) {
+    if (!obj.colorHist || !obj.pos) {
+        return null;
+    }
+
     return {
-        carId: "",
-        pos: {
-            lat: 0.0,
-            long: 0.0
-        }
+        colorHist: obj.colorHist,
+        pos: obj.pos
     };
 };
