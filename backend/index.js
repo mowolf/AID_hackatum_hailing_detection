@@ -1,6 +1,3 @@
-const MakeCarState = require("./models/CarState.js");
-const MakeWaitingPassenger = require("./models/waitingPassenger.js");
-
 const express = require("express");
 const app = express();
 
@@ -10,8 +7,11 @@ const io = require("socket.io")(http);
 const cors = require("cors");
 const bodyParser = require("body-parser");
 
+const MakeCarStatus = require("./models/CarStatus.js");
+const MakeWaitingPassenger = require("./models/waitingPassenger.js");
+
 const state = {
-    carStates: [],
+    carStatuses: [],
     waitingPassengers: []
 };
 
@@ -22,10 +22,6 @@ app.use(bodyParser.json());
 
 app.get("/", function(req, res) {
     res.send("Hello World!");
-});
-
-app.get("/carStates", (req, res) => {
-    res.json(state.carStates);
 });
 
 app.post("/waitingPassenger", (req, res) => {
@@ -40,11 +36,25 @@ app.post("/waitingPassenger", (req, res) => {
     res.sendStatus(200);
 });
 
+app.post("/status", (req, res) => {
+    const carStatus = MakeCarStatus(req.body);
+
+    if (!carStatus) {
+        res.send(500, "Malformed Car State Update...");
+        return;
+    }
+
+    state.carStatuses.push(carStatus);
+    res.sendStatus(200);
+});
+
+// Websocketzeug
+
 io.on("connection", function(socket) {
     console.log("A user connected");
 
     setInterval(function() {
-        socket.emit("carStates", state.carStates);
+        socket.emit("carStatuses", state.carStatuses);
     }, 1000);
 
     setInterval(function() {
@@ -59,6 +69,17 @@ io.on("connection", function(socket) {
 http.listen(3000, function() {
     console.log("websocket listening on 3000");
 
-    const newCarState = MakeCarState();
-    state.carStates.push(newCarState);
+    const newCarStatus = MakeCarStatus();
+    state.carStatuses.push(newCarStatus);
 });
+
+const checkWaitingPassengers = function() {
+    if (state.waitingPassengers.length == 0) {
+        return;
+    }
+
+    console.log("We have waiting customers...");
+    console.log(state.waitingPassengers);
+};
+
+setInterval(checkWaitingPassengers, 5000);
