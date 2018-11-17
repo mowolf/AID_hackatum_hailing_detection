@@ -1,0 +1,9 @@
+module.exports = function() {
+    return {
+        carId: "",
+        pos: {
+            lat: 0.0,
+            long: 0.0
+        }
+    };
+};
