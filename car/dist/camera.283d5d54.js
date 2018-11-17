@@ -60800,14 +60800,18 @@ function detectPoseInRealTime(video, net) {
         let d = new Date();
         const timeCurrent = d.getTime(); // api call
 
-        if (lastCallTime + 10 * 1000 < timeCurrent) {
+        if (lastCallTime + 20 * 1000 < timeCurrent) {
           switchBool = !switchBool;
 
           if (switchBool) {
             new Audio(nextMP3).play();
           } else {
             new Audio(rightMP3).play();
-          }
+          } // timeout for API
+
+
+          d = new Date();
+          lastCallTime = d.getTime(); // send API
 
           const data = {
             colorHist: 11,
@@ -60817,20 +60821,28 @@ function detectPoseInRealTime(video, net) {
             }
           };
           postData(`http://localhost:3000/waitingPassenger`, (0, _stringify.default)(data)).then(data => console.log("POST REQUEST SENT TO API")) // JSON-string from `response.json()` call
-          .catch(error => console.error(error));
-          d = new Date();
-          lastCallTime = d.getTime();
+          .catch(error => console.error(error)); // show visuals
+
+          document.getElementById('detection').style.display = 'block';
         } else {
           console.log("API is NOT ready! Still in timeout.");
         }
-      }
+      } // delete visuals
+
+
+      const d2 = new Date();
+      const timeCurrentFrame = d2.getTime();
+
+      if (lastCallTime + 2000 < timeCurrentFrame) {
+        document.getElementById('detection').style.display = 'none';
+      } // update Frame ID
+
 
       frameID++;
 
       if (frameID > framesToCheck) {
         frameID = 0;
-      } // wrist higher then elobow
-      //keypoints[10].position.y < keypoints[8].position.y
+      } // draw skeletton
 
 
       if (score >= minPoseConfidence) {
@@ -60906,3 +60918,5 @@ navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia 
 bindPage();
 },{"babel-runtime/core-js/json/stringify":"node_modules/babel-runtime/core-js/json/stringify.js","babel-runtime/core-js/promise":"node_modules/babel-runtime/core-js/promise.js","@tensorflow-models/posenet":"node_modules/@tensorflow-models/posenet/dist/posenet.esm.js","dat.gui":"node_modules/dat.gui/build/dat.gui.module.js","stats.js":"node_modules/stats.js/build/stats.min.js","socket.io-client":"node_modules/socket.io-client/lib/index.js","./demo_util":"demo_util.js","./sound/right.mp3":"sound/right.mp3","./sound/next.mp3":"sound/next.mp3"}]},{},["camera.js"], null)
 //# sourceMappingURL=/camera.283d5d54.map
+        if (lastCallTime + 10 * 1000 < timeCurrent) {
+          // audio
