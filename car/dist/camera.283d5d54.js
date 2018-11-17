@@ -53979,6 +53979,8 @@ function drawOffsetVectors(heatMapValues, offsets, outputStride, scale = 1, ctx)
 }
 },{"@tensorflow-models/posenet":"node_modules/@tensorflow-models/posenet/dist/posenet.esm.js","@tensorflow/tfjs":"node_modules/@tensorflow/tfjs/dist/tf.esm.js"}],"sound/right.mp3":[function(require,module,exports) {
 module.exports = "/right.277944c8.mp3";
+},{}],"sound/next.mp3":[function(require,module,exports) {
+module.exports = "/next.176efb32.mp3";
 },{}],"camera.js":[function(require,module,exports) {
 "use strict";
 
@@ -54024,8 +54026,11 @@ const videoHeight = 500;
 const stats = new _stats.default();
 let lastCallTime = -60000;
 
-const mp3File = require('./sound/right.mp3'); // state for time detection of constant action, array of true and false values
+const rightMP3 = require('./sound/right.mp3');
 
+const nextMP3 = require('./sound/next.mp3');
+
+let switchBool = true; // state for time detection of constant action, array of true and false values
 
 let frameStateBooleanArray = [];
 let frameID = 0;
@@ -54286,7 +54291,14 @@ function detectPoseInRealTime(video, net) {
         const timeCurrent = d.getTime(); // api call
 
         if (lastCallTime + 20 * 1000 < timeCurrent) {
-          new Audio(mp3File).play();
+          switchBool = !switchBool;
+
+          if (switchBool) {
+            new Audio(nextMP3).play();
+          } else {
+            new Audio(rightMP3).play();
+          }
+
           const data = {
             colorHist: 11,
             pos: {
@@ -54382,5 +54394,5 @@ async function bindPage() {
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia; // kick off the demo
 
 bindPage();
-},{"babel-runtime/core-js/json/stringify":"node_modules/babel-runtime/core-js/json/stringify.js","babel-runtime/core-js/promise":"node_modules/babel-runtime/core-js/promise.js","@tensorflow-models/posenet":"node_modules/@tensorflow-models/posenet/dist/posenet.esm.js","dat.gui":"node_modules/dat.gui/build/dat.gui.module.js","stats.js":"node_modules/stats.js/build/stats.min.js","./demo_util":"demo_util.js","./sound/right.mp3":"sound/right.mp3"}]},{},["camera.js"], null)
+},{"babel-runtime/core-js/json/stringify":"node_modules/babel-runtime/core-js/json/stringify.js","babel-runtime/core-js/promise":"node_modules/babel-runtime/core-js/promise.js","@tensorflow-models/posenet":"node_modules/@tensorflow-models/posenet/dist/posenet.esm.js","dat.gui":"node_modules/dat.gui/build/dat.gui.module.js","stats.js":"node_modules/stats.js/build/stats.min.js","./demo_util":"demo_util.js","./sound/right.mp3":"sound/right.mp3","./sound/next.mp3":"sound/next.mp3"}]},{},["camera.js"], null)
 //# sourceMappingURL=/camera.283d5d54.map

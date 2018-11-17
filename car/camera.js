@@ -24,7 +24,9 @@ const videoWidth = 600;
 const videoHeight = 500;
 const stats = new Stats();
 let lastCallTime = -60000;
-const mp3File = require('./sound/right.mp3');
+const rightMP3 = require('./sound/right.mp3');
+const nextMP3 = require('./sound/next.mp3');
+let switchBool = true;
 
 
 // state for time detection of constant action, array of true and false values
@@ -317,7 +319,14 @@ function detectPoseInRealTime(video, net) {
         const timeCurrent = d.getTime();
         // api call
         if ( (lastCallTime + 20*1000) <  timeCurrent) {
-          new Audio(mp3File).play()
+
+          switchBool = !switchBool;
+
+          if (switchBool) {
+            new Audio(nextMP3).play()
+          } else {
+            new Audio(rightMP3).play()
+          }
 
           const data = {colorHist: 11, pos: {lat: 48.263147, lng: 11.670846}};
 
