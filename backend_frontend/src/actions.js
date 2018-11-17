@@ -1,12 +1,12 @@
 import io from "socket.io-client";
 
-const socket = io("http://localhost:3000/socket.io");
+const socket = io("http://localhost:3000");
 
 export const init = store => {
-  ["carStates"].forEach(type =>
+  ["carStatuses"].forEach(type =>
     socket.on(type, payload => {
       console.log("received socket message");
-        store.dispatch({ type, payload });
+      store.dispatch({ type, payload });
     })
   );
 };

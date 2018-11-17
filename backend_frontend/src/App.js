@@ -13,26 +13,20 @@ const Background = styled.div`
 `;
 
 class App extends Component {
-
   onChange = e => {
     this.props.test(e.target.value);
-  }
+  };
 
   render() {
-    const carStates = this.props.carStates;
-    return <Background>
-      {JSON.stringify(carStates)}
-    </Background>;
+    const carStatuses = this.props.carStatuses;
+    return <Background>{JSON.stringify(carStatuses)}</Background>;
   }
 }
 
 const mapStateToProps = state => {
   return {
-    carStates: state.carStates
+    carStatuses: state.carStatuses
   };
 };
 
-export default connect(
-  mapStateToProps,
-  { }
-)(App);
+export default connect(mapStateToProps, {})(App);
