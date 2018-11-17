@@ -54175,6 +54175,10 @@ function setupFPS() {
  */
 
 
+function eucl_dist(keypoint1, keypoint2) {
+  Math.sqrt(Math.pow(keypoint1.position.x - keypoint2.position.x, 2) + Math.pow(keypoint1.position.y - keypoint2.position.y, 2));
+}
+
 function detectPoseInRealTime(video, net) {
   const canvas = document.getElementById('output');
   const ctx = canvas.getContext('2d'); // since images are being fed from a webcam
@@ -54232,23 +54236,23 @@ function detectPoseInRealTime(video, net) {
     //console.log(poses);
 
 
+    let detectedPoses = poses.length;
     poses.forEach(({
       score,
       keypoints
     }) => {
       let color = 'aqua'; // 0 (nose)
-      //left: 5 (shoulder), 7 (elbow), 9 (wrist) --- 1, (eye), 3 (ear), 
-      //right: 6 (shoulder), 8 (elbow), 10 (wrist) --- 2(eye),4 (ear), 
-      //right shoulder lower then right wrist
-      //  y distance between nose and shoulder must be lower then x distance between nose & wrist!    
+      //left: 5 (shoulder), 7 (elbow), 9 (wrist) --- 1, (eye), 3 (ear),
+      //right: 6 (shoulder), 8 (elbow), 10 (wrist) --- 2(eye),4 (ear),
 
-      const distanceShoulderToNose = Math.abs(keypoints[0].position.y - 0.5 * (keypoints[5].position.y + keypoints[6].position.y));
-      const armLength = Math.sqrt(Math.pow(keypoints[5].position.x - keypoints[7].position.x, 2) + Math.pow(keypoints[5].position.y - keypoints[7].position.y, 2)) + Math.sqrt(Math.pow(keypoints[7].position.x - keypoints[9].position.x, 2) + Math.pow(keypoints[7].position.y - keypoints[9].position.y, 2));
-      const armsReachedOut = keypoints[9].position.x - keypoints[5].position.x > 0.8 * armLength;
-      const gestureAccepted = Math.abs(keypoints[9].position.x - keypoints[0].position.x) > distanceShoulderToNose;
+      const armLength = eucl_dist(keypoints[5], keypoints[7]) + eucl_dist(keypoints[7], keypoints[9]);
+      const distanceXShoulderToWrist = Math.max(keypoints[9].position.x - keypoints[5].position.x, keypoints[6].position.x - keypoints[10].position.x);
+      const armsReachedOut = distanceXShoulderToWrist > 0.8 * armLength;
+      const distanceYShoulderToNose = Math.abs(keypoints[0].position.y - 0.5 * (keypoints[5].position.y + keypoints[6].position.y));
+      const gestureAccepted = Math.max(Math.abs(keypoints[9].position.x - keypoints[0].position.x), keypoints[10].position.x - keypoints[0].position.x) > distanceYShoulderToNose;
       const noseDetected = keypoints[0].score > minPartConfidence;
-      const wristAboveShoulder = keypoints[5].position.y > keypoints[9].position.y;
       const eyesDetected = keypoints[1].score > minPartConfidence && keypoints[2].score > minPartConfidence;
+      const wristAboveShoulder = Math.min(keypoints[5].position.y, keypoints[6].position.y) > Math.min(keypoints[10].position.y, keypoints[9].position.y);
 
       if (noseDetected && eyesDetected && (wristAboveShoulder || armsReachedOut) && gestureAccepted) {
         color = 'orange';
@@ -54258,8 +54262,9 @@ function detectPoseInRealTime(video, net) {
       }
 
       let averageTimeDetectionState = frameStateBooleanArray.reduce((a, b) => a + b, 0) / frameStateBooleanArray.length;
+      console.log(detectedPoses);
 
-      if (averageTimeDetectionState > 0.8) {
+      if (averageTimeDetectionState > 0.8 / detectedPoses + 0.05 * (detectedPoses - 1)) {
         color = 'red';
       }
 
@@ -54267,10 +54272,9 @@ function detectPoseInRealTime(video, net) {
 
       if (frameID > framesToCheck) {
         frameID = 0;
-      }
-
-      console.log(frameStateBooleanArray[frameID]); // wrist higher then elobow
+      } // wrist higher then elobow
       //keypoints[10].position.y < keypoints[8].position.y
+
 
       if (score >= minPoseConfidence) {
         if (guiState.output.showPoints) {
