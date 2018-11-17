@@ -268,55 +268,59 @@ function detectPoseInRealTime(video, net) {
     // For each pose (i.e. person) detected in an image, loop through the poses
     // and draw the resulting skeleton and keypoints if over certain confidence
     // scores
-
+	//console.log(poses);
+	
+	
+	
     poses.forEach(({score, keypoints}) => {
 
       let color = 'aqua';
-
+      
       // 0 (nose)
-      //left: 5 (shoulder), 7 (elbow), 9 (wrist) --- 1, (eye), 3 (ear),
-      //right: 6 (shoulder), 8 (elbow), 10 (wrist) --- 2(eye),4 (ear),
-
-      //  y distance between nose and shoulder must be lower then x distance between nose & wrist!
+      //left: 5 (shoulder), 7 (elbow), 9 (wrist) --- 1, (eye), 3 (ear), 
+      //right: 6 (shoulder), 8 (elbow), 10 (wrist) --- 2(eye),4 (ear), 
+      
+      
+      //right shoulder lower then right wrist
+      
+      //  y distance between nose and shoulder must be lower then x distance between nose & wrist!    
+      
     const distanceShoulderToNose = Math.abs( keypoints[0].position.y - 0.5*(keypoints[5].position.y+keypoints[6].position.y) );
 	const armLength = Math.sqrt( Math.pow((keypoints[5].position.x - keypoints[7].position.x),2) + Math.pow((keypoints[5].position.y -keypoints[7].position.y),2)) + Math.sqrt(Math.pow((keypoints[7].position.x - keypoints[9].position.x),2) + Math.pow((keypoints[7].position.y -keypoints[9].position.y),2))
 
 	const armsReachedOut = (keypoints[9].position.x - keypoints[5].position.x) > (0.8*armLength)
-  const gestureAccepted = ( Math.abs(keypoints[9].position.x -keypoints[0].position.x)  > distanceShoulderToNose )
+    const gestureAccepted = ( Math.abs(keypoints[9].position.x -keypoints[0].position.x)  > distanceShoulderToNose )   
 	const noseDetected = (keypoints[0].score > minPartConfidence);
-	const wristAboveShoulder = (keypoints[5].position.y > keypoints[9].position.y);
+	const wristAboveShoulder = (keypoints[5].position.y > keypoints[9].position.y);	
 	const eyesDetected = ( (keypoints[1].score > minPartConfidence) && (keypoints[2].score > minPartConfidence) ) ;
-
-
+	
+	
       if ( noseDetected && eyesDetected && ( wristAboveShoulder || armsReachedOut )&& gestureAccepted ) {
       	color = 'orange';
       	frameStateBooleanArray[frameID] = 1;
       } else {
       	frameStateBooleanArray[frameID] = 0;
       }
-
+      
       let averageTimeDetectionState = frameStateBooleanArray.reduce( (a,b) => a + b, 0) / frameStateBooleanArray.length;
-
+      	
       if (averageTimeDetectionState > 0.8) {
       	color = 'red';
-
-        // CALL API
-
       }
-
+      	
       frameID++;
-
+      
       if ( frameID > framesToCheck ) {
       	frameID = 0;
       }
-
-
+      
+      
       console.log(frameStateBooleanArray[frameID]);
-
-
+      
+      
       // wrist higher then elobow
       //keypoints[10].position.y < keypoints[8].position.y
-
+      
 
       if (score >= minPoseConfidence) {
         if (guiState.output.showPoints) {
