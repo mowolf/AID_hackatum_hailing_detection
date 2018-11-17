@@ -80,6 +80,8 @@ const checkWaitingPassengers = function() {
 
     console.log("We have waiting customers...");
     console.log(state.waitingPassengers);
+
+    setTimeout(checkWaitingPassengers, 5000);
 };
 
-setInterval(checkWaitingPassengers, 5000);
+checkWaitingPassengers();
