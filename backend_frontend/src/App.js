@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import styled from "styled-components";
 import { connect } from "react-redux";
-import { test } from "./actions";
+// import { init } from "./actions";
 
 const Background = styled.div`
   background-color: #ecf0f1;
@@ -19,21 +19,20 @@ class App extends Component {
   }
 
   render() {
-    const message = this.props.message;
+    const carStates = this.props.carStates;
     return <Background>
-      <input onChange={this.onChange} value={message} />
-    {message}
+      {JSON.stringify(carStates)}
     </Background>;
   }
 }
 
 const mapStateToProps = state => {
   return {
-    message: state.message
+    carStates: state.carStates
   };
 };
 
 export default connect(
   mapStateToProps,
-  { test }
+  { }
 )(App);

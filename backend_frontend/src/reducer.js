@@ -1,13 +1,13 @@
 const default_sate = {
-    message: 'Hello World!'
+    carStates: []
 }
 
 export default (state = default_sate, action) => {
     switch (action.type) {
-        case 'TEST':
+        case 'carStates':
             return {
                 ...state,
-                message: action.payload
+                carStates: action.payload
             }
     
         default:
