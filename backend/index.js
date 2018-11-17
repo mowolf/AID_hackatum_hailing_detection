@@ -1,5 +1,6 @@
-var express = require("express");
-var app = express();
+const CarState = require("./models/CarState.js");
+const express = require("express");
+const app = express();
 
 const state = {
     carStates: [],
@@ -15,5 +16,6 @@ app.get("/carStates", (req, res) => {
 });
 
 app.listen(3000, function() {
+    state.carStates.push(CarState());
     console.log("Example app listening on port 3000!");
 });
