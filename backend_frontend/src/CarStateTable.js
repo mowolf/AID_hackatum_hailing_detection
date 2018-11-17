@@ -24,7 +24,6 @@ class CarStateTable extends Component {
 
     for (let carState of this.props.carStates) {
       if (Object.keys(numbers).includes(carState.state)) {
-        console.log(carState.state);
         numbers[carState.state] += 1;
       }
     }
