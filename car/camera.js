@@ -18,11 +18,7 @@ import * as posenet from '@tensorflow-models/posenet';
 import dat from 'dat.gui';
 import Stats from 'stats.js';
 
-import {
-  drawBoundingBox,
-  drawKeypoints,
-  drawSkeleton
-} from './demo_util';
+import {drawBoundingBox, drawKeypoints, drawSkeleton} from './demo_util';
 
 const videoWidth = 600;
 const videoHeight = 500;
@@ -54,7 +50,7 @@ function isMobile() {
 async function setupCamera() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     throw new Error(
-      'Browser API navigator.mediaDevices.getUserMedia not available');
+        'Browser API navigator.mediaDevices.getUserMedia not available');
   }
 
   const video = document.getElementById('video');
@@ -122,15 +118,13 @@ function setupGui(cameras, net) {
     guiState.camera = cameras[0].deviceId;
   }
 
-  const gui = new dat.GUI({
-    width: 300
-  });
+  const gui = new dat.GUI({width: 300});
 
   // The single-pose algorithm is faster and simpler but requires only one
   // person to be in the frame or results will be innaccurate. Multi-pose works
   // for more than 1 person
   const algorithmController =
-    gui.add(guiState, 'algorithm', ['single-pose', 'multi-pose']);
+      gui.add(guiState, 'algorithm', ['single-pose', 'multi-pose']);
 
   // The input parameters have the most effect on accuracy and speed of the
   // network
@@ -139,8 +133,8 @@ function setupGui(cameras, net) {
   // accuracy. 1.01 is the largest, but will be the slowest. 0.50 is the
   // fastest, but least accurate.
   const architectureController = input.add(
-    guiState.input, 'mobileNetArchitecture',
-    ['1.01', '1.00', '0.75', '0.50']);
+      guiState.input, 'mobileNetArchitecture',
+      ['1.01', '1.00', '0.75', '0.50']);
   // Output stride:  Internally, this parameter affects the height and width of
   // the layers in the neural network. The lower the value of the output stride
   // the higher the accuracy but slower the speed, the higher the value the
@@ -161,9 +155,9 @@ function setupGui(cameras, net) {
 
   let multi = gui.addFolder('Multi Pose Detection');
   multi.add(guiState.multiPoseDetection, 'maxPoseDetections')
-    .min(1)
-    .max(20)
-    .step(1);
+      .min(1)
+      .max(20)
+      .step(1);
   multi.add(guiState.multiPoseDetection, 'minPoseConfidence', 0.0, 1.0);
   multi.add(guiState.multiPoseDetection, 'minPartConfidence', 0.0, 1.0);
   // nms Radius: controls the minimum distance between poses that are returned
@@ -201,7 +195,7 @@ function setupGui(cameras, net) {
  * Sets up a frames per second panel on the top-left of the window
  */
 function setupFPS() {
-  stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+  stats.showPanel(0);  // 0: fps, 1: ms, 2: mb, 3+: custom
   document.body.appendChild(stats.dom);
 }
 
@@ -211,8 +205,8 @@ function setupFPS() {
  */
 
 
-function eucl_dist(keypoint1, keypoint2) {
-  Math.sqrt(Math.pow(keypoint1.position.x - keypoint2.position.x, 2) + Math.pow(keypoint1.position.y - keypoint2.position.y, 2));
+ function eucl_dist(keypoint1, keypoint2){
+    Math.sqrt( Math.pow(keypoint1.position.x - keypoint2.position.x,2) + Math.pow(keypoint1.position.y - keypoint2.position.y,2));
 }
 
 
@@ -251,7 +245,7 @@ function detectPoseInRealTime(video, net) {
     switch (guiState.algorithm) {
       case 'single-pose':
         const pose = await guiState.net.estimateSinglePose(
-          video, imageScaleFactor, flipHorizontal, outputStride);
+            video, imageScaleFactor, flipHorizontal, outputStride);
         poses.push(pose);
 
         minPoseConfidence = +guiState.singlePoseDetection.minPoseConfidence;
@@ -259,10 +253,10 @@ function detectPoseInRealTime(video, net) {
         break;
       case 'multi-pose':
         poses = await guiState.net.estimateMultiplePoses(
-          video, imageScaleFactor, flipHorizontal, outputStride,
-          guiState.multiPoseDetection.maxPoseDetections,
-          guiState.multiPoseDetection.minPartConfidence,
-          guiState.multiPoseDetection.nmsRadius);
+            video, imageScaleFactor, flipHorizontal, outputStride,
+            guiState.multiPoseDetection.maxPoseDetections,
+            guiState.multiPoseDetection.minPartConfidence,
+            guiState.multiPoseDetection.nmsRadius);
 
         minPoseConfidence = +guiState.multiPoseDetection.minPoseConfidence;
         minPartConfidence = +guiState.multiPoseDetection.minPartConfidence;
@@ -282,14 +276,11 @@ function detectPoseInRealTime(video, net) {
     // For each pose (i.e. person) detected in an image, loop through the poses
     // and draw the resulting skeleton and keypoints if over certain confidence
     // scores
-    //console.log(poses);
+	//console.log(poses);
 
-    let detectedPoses = poses.length;
+  let detectedPoses = poses.length;
 
-    poses.forEach(({
-      score,
-      keypoints
-    }) => {
+    poses.forEach(({score, keypoints}) => {
 
       let color = 'aqua';
 
@@ -297,67 +288,51 @@ function detectPoseInRealTime(video, net) {
       //left: 5 (shoulder), 7 (elbow), 9 (wrist) --- 1, (eye), 3 (ear),
       //right: 6 (shoulder), 8 (elbow), 10 (wrist) --- 2(eye),4 (ear),
 
-      const armLength = eucl_dist(keypoints[5], keypoints[7]) + eucl_dist(keypoints[7], keypoints[9]);
-      const distanceXShoulderToWrist = Math.max(keypoints[9].position.x - keypoints[5].position.x, keypoints[6].position.x - keypoints[10].position.x);
-      const armsReachedOut = distanceXShoulderToWrist > (0.8 * armLength);
+    const armLength = eucl_dist(keypoints[5],keypoints[7]) + eucl_dist(keypoints[7],keypoints[9]);
+    const distanceXShoulderToWrist = Math.max(keypoints[9].position.x - keypoints[5].position.x, keypoints[6].position.x - keypoints[10].position.x);
+    const armsReachedOut = distanceXShoulderToWrist > (0.8*armLength);
 
-      const distanceYShoulderToNose = Math.abs(keypoints[0].position.y - 0.5 * (keypoints[5].position.y + keypoints[6].position.y));
-      const gestureAccepted = (Math.max(Math.abs(keypoints[9].position.x - keypoints[0].position.x), (keypoints[10].position.x - keypoints[0].position.x)) > distanceYShoulderToNose);
+    const distanceYShoulderToNose = Math.abs( keypoints[0].position.y - 0.5*(keypoints[5].position.y+keypoints[6].position.y) );
+    const gestureAccepted = ( Math.max(Math.abs(keypoints[9].position.x - keypoints[0].position.x), (keypoints[10].position.x -keypoints[0].position.x)) > distanceYShoulderToNose );
 
-      const noseDetected = (keypoints[0].score > minPartConfidence);
-      const eyesDetected = ((keypoints[1].score > minPartConfidence) && (keypoints[2].score > minPartConfidence));
+    const noseDetected = (keypoints[0].score > minPartConfidence);
+    const eyesDetected = ( (keypoints[1].score > minPartConfidence) && (keypoints[2].score > minPartConfidence) ) ;
 
-      const wristAboveShoulder = Math.min(keypoints[5].position.y, keypoints[6].position.y) > Math.min(keypoints[10].position.y, keypoints[9].position.y);
+    const wristAboveShoulder = Math.min(keypoints[5].position.y, keypoints[6].position.y) > Math.min(keypoints[10].position.y, keypoints[9].position.y);
 
 
-      if (noseDetected && eyesDetected && (wristAboveShoulder || armsReachedOut) && gestureAccepted) {
-        color = 'orange';
-        frameStateBooleanArray[frameID] = 1;
+      if ( noseDetected && eyesDetected && ( wristAboveShoulder || armsReachedOut )&& gestureAccepted ) {
+      	color = 'orange';
+      	frameStateBooleanArray[frameID] = 1;
       } else {
-        frameStateBooleanArray[frameID] = 0;
+      	frameStateBooleanArray[frameID] = 0;
       }
 
-      let averageTimeDetectionState = frameStateBooleanArray.reduce((a, b) => a + b, 0) / frameStateBooleanArray.length;
+      let averageTimeDetectionState = frameStateBooleanArray.reduce( (a,b) => a + b, 0) / frameStateBooleanArray.length;
       console.log(detectedPoses)
-      if (averageTimeDetectionState > 0.8 / detectedPoses + 0.05 * (detectedPoses - 1)) {
-        color = 'red';
-
-
+      if (averageTimeDetectionState > 0.8/detectedPoses+0.05*(detectedPoses-1)) {
+      	color = 'red';
         // make api call
-        let data = {
-          colorHist: 1,
-          pos: {
-            lat: 48.263147,
-            long: 11.670846
-          }
-        };
+        let data = {colorHist: 1 ,pos: {lat: 48.263147, long: 11.670846}};
 
-        if ((lastCallTime + 60 * 1000) > d.getTime()) {
+        if ( (lastCallTime + 60*1000) > d.getTime() ) {
 
           postData(`http://localhost:3000/waitingPassenger`, JSON.stringify(data))
-            .then(data => console.log(data + "POST TO API")) // JSON-string from `response.json()` call
-            .catch(error => console.error(error));
+              .then(data => console.log(data + "POST TO API")) // JSON-string from `response.json()` call
+              .catch(error => console.error(error));
 
           lastCallTime = d.getTime();
         }
-
-
-
-
-
       }
 
       frameID++;
 
-      if (frameID > framesToCheck) {
-        frameID = 0;
+      if ( frameID > framesToCheck ) {
+      	frameID = 0;
       }
-
 
       // wrist higher then elobow
       //keypoints[10].position.y < keypoints[8].position.y
-
-
       if (score >= minPoseConfidence) {
         if (guiState.output.showPoints) {
           drawKeypoints(keypoints, minPartConfidence, ctx);
@@ -370,7 +345,6 @@ function detectPoseInRealTime(video, net) {
         }
       }
     });
-
     // End monitoring code for frames per second
     stats.end();
 
@@ -383,20 +357,20 @@ function detectPoseInRealTime(video, net) {
 // api call
 function postData(url = ``, data = {}) {
   // Default options are marked with *
-  return fetch(url, {
-    method: "POST", // *GET, POST, PUT, DELETE, etc.
-    mode: "cors", // no-cors, cors, *same-origin
-    cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
-    credentials: "same-origin", // include, *same-origin, omit
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      // "Content-Type": "application/x-www-form-urlencoded",
-    },
-    redirect: "follow", // manual, *follow, error
-    referrer: "no-referrer", // no-referrer, *client
-    body: data, // body data type must match "Content-Type" header
-  })
-  //.then(response => response.json()); // parses response to JSON
+    return fetch(url, {
+        method: "POST", // *GET, POST, PUT, DELETE, etc.
+        mode: "cors", // no-cors, cors, *same-origin
+        cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+        credentials: "same-origin", // include, *same-origin, omit
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+            // "Content-Type": "application/x-www-form-urlencoded",
+        },
+        redirect: "follow", // manual, *follow, error
+        referrer: "no-referrer", // no-referrer, *client
+        body: data, // body data type must match "Content-Type" header
+    })
+    //.then(response => response.json()); // parses response to JSON
 }
 
 /**
@@ -417,7 +391,7 @@ export async function bindPage() {
   } catch (e) {
     let info = document.getElementById('info');
     info.textContent = 'this browser does not support video capture,' +
-      'or this device does not have a camera';
+        'or this device does not have a camera';
     info.style.display = 'block';
     throw e;
   }
@@ -428,6 +402,6 @@ export async function bindPage() {
 }
 
 navigator.getUserMedia = navigator.getUserMedia ||
-  navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+    navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 // kick off the demo
 bindPage();
