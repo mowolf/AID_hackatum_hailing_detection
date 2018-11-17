@@ -126,8 +126,12 @@ const tellCabToGetPassenger = function(cabId, passenger) {
 };
 
 const distanceBetweenPositions = function(posA, posB) {
-    // TODO: replace by API call to roadnav service
-    return Math.sqrt(Math.pow(posA, 2) + Math.pow(posB, 2));
+    // TODO: replace by API call to roadnav service or some other metric
+
+    const deltaLat = posA.lat - posB.lat;
+    const deltaLong = posA.long - posB.long;
+
+    return Math.sqrt(Math.pow(deltaLat, 2) + Math.pow(deltaLong, 2));
 };
 
 const checkWaitingPassengers = function() {
