@@ -53977,7 +53977,11 @@ function drawOffsetVectors(heatMapValues, offsets, outputStride, scale = 1, ctx)
     drawSegment([heatmapY, heatmapX], [offsetPointY, offsetPointX], colorA, scale, ctx);
   }
 }
-},{"@tensorflow-models/posenet":"node_modules/@tensorflow-models/posenet/dist/posenet.esm.js","@tensorflow/tfjs":"node_modules/@tensorflow/tfjs/dist/tf.esm.js"}],"camera.js":[function(require,module,exports) {
+},{"@tensorflow-models/posenet":"node_modules/@tensorflow-models/posenet/dist/posenet.esm.js","@tensorflow/tfjs":"node_modules/@tensorflow/tfjs/dist/tf.esm.js"}],"sound/right.mp3":[function(require,module,exports) {
+module.exports = "/right.277944c8.mp3";
+},{}],"sound/next.mp3":[function(require,module,exports) {
+module.exports = "/next.176efb32.mp3";
+},{}],"camera.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -54020,8 +54024,13 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 const videoWidth = 600;
 const videoHeight = 500;
 const stats = new _stats.default();
-let d = new Date();
-let lastCallTime = -60000; // state for time detection of constant action, array of true and false values
+let lastCallTime = -60000;
+
+const rightMP3 = require('./sound/right.mp3');
+
+const nextMP3 = require('./sound/next.mp3');
+
+let switchBool = true; // state for time detection of constant action, array of true and false values
 
 let frameStateBooleanArray = [];
 let frameID = 0;
@@ -54277,10 +54286,19 @@ function detectPoseInRealTime(video, net) {
 
       if (averageTimeDetectionState > 0.8 / detectedPoses + 0.05 * (detectedPoses - 1)) {
         color = 'red'; // answer
-        // new Audio('/sound/Right.mp3').play()
-        // make api call
 
-        if (lastCallTime + 60 * 1000 < d.getTime()) {
+        let d = new Date();
+        const timeCurrent = d.getTime(); // api call
+
+        if (lastCallTime + 20 * 1000 < timeCurrent) {
+          switchBool = !switchBool;
+
+          if (switchBool) {
+            new Audio(nextMP3).play();
+          } else {
+            new Audio(rightMP3).play();
+          }
+
           const data = {
             colorHist: 11,
             pos: {
@@ -54288,9 +54306,12 @@ function detectPoseInRealTime(video, net) {
               lng: 11.670846
             }
           };
-          postData(`http://localhost:3000/waitingPassenger`, (0, _stringify.default)(data)).then(data => console.log("POST TO API")) // JSON-string from `response.json()` call
+          postData(`http://localhost:3000/waitingPassenger`, (0, _stringify.default)(data)).then(data => console.log("POST REQUEST SENT TO API")) // JSON-string from `response.json()` call
           .catch(error => console.error(error));
+          d = new Date();
           lastCallTime = d.getTime();
+        } else {
+          console.log("API is NOT ready! Still in timeout.");
         }
       }
 
@@ -54373,5 +54394,5 @@ async function bindPage() {
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia; // kick off the demo
 
 bindPage();
-},{"babel-runtime/core-js/json/stringify":"node_modules/babel-runtime/core-js/json/stringify.js","babel-runtime/core-js/promise":"node_modules/babel-runtime/core-js/promise.js","@tensorflow-models/posenet":"node_modules/@tensorflow-models/posenet/dist/posenet.esm.js","dat.gui":"node_modules/dat.gui/build/dat.gui.module.js","stats.js":"node_modules/stats.js/build/stats.min.js","./demo_util":"demo_util.js"}]},{},["camera.js"], null)
+},{"babel-runtime/core-js/json/stringify":"node_modules/babel-runtime/core-js/json/stringify.js","babel-runtime/core-js/promise":"node_modules/babel-runtime/core-js/promise.js","@tensorflow-models/posenet":"node_modules/@tensorflow-models/posenet/dist/posenet.esm.js","dat.gui":"node_modules/dat.gui/build/dat.gui.module.js","stats.js":"node_modules/stats.js/build/stats.min.js","./demo_util":"demo_util.js","./sound/right.mp3":"sound/right.mp3","./sound/next.mp3":"sound/next.mp3"}]},{},["camera.js"], null)
 //# sourceMappingURL=/camera.283d5d54.map
