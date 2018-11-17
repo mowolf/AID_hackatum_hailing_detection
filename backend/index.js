@@ -81,16 +81,65 @@ http.listen(3000, function() {
   state.carStatuses.push(newCarStatus);
 });
 
+const tellCabToGetPassenger = function(cabId, passenger) {
+    console.log("telling " + cabId + " to go and get sb");
+
+    const cab = state.carStatuses.filter(
+        carStatus => carStatus.carId === cabId
+    )[0];
+    const targetPos = cab.pos;
+
+    cab.state = "APPROACHING";
+
+    console.log("found cab to get passenger");
+    console.log(cabId + " should get " + passenger);
+
+    // TODO: Networking code to tell cab to go to targetPos
+};
+
+const distanceBetweenPositions = function(posA, posB) {
+    // TODO: replace by API call to roadnav service
+    return Math.sqrt(Math.pow(posA, 2) + Math.pow(posB, 2));
+};
+
 const checkWaitingPassengers = function() {
   if (state.waitingPassengers.length == 0) {
     setTimeout(checkWaitingPassengers, 5000);
     return;
   }
 
-  console.log("We have waiting customers...");
-  console.log(state.waitingPassengers);
+    console.log("We have waiting customers...");
+    console.log(state.waitingPassengers);
+    // for passenger in waitingpassengers
+    state.waitingPassengers.forEach(passenger => {
+        var minDist = Infinity;
+        var bestCabId = -1;
+
+        // find closest free cab
+        state.carStatuses.forEach(carStatus => {
+            if (carStatus.state !== "FREE") {
+                return;
+            }
+
+            const distanceToPassenger = distanceBetweenPositions(
+                carStatus.pos,
+                passenger.pos
+            );
+            if (distanceToPassenger < minDist) {
+                minDist = distanceToPassenger;
+                bestCabId = carStatus.carId;
+            }
+        });
+
+        // tell cab to get passenger
+        if (bestCabId > -1) {
+            tellCabToGetPassenger(bestCabId, passenger);
+        }
+    });
+
+    console.log("We have waiting customers...");
+    console.log(state.waitingPassengers);
 
   setTimeout(checkWaitingPassengers, 5000);
 };
-
 checkWaitingPassengers();
