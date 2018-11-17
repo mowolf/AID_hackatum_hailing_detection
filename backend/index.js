@@ -8,7 +8,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 
 const MakeCarStatus = require("./models/CarStatus.js");
-const MakeWaitingPassenger = require("./models/waitingPassenger.js");
+const MakeWaitingPassenger = require("./models/WaitingPassenger.js");
 
 const state = {
     carStatuses: [],
@@ -75,6 +75,7 @@ http.listen(3000, function() {
 
 const checkWaitingPassengers = function() {
     if (state.waitingPassengers.length == 0) {
+        setTimeout(checkWaitingPassengers, 5000);
         return;
     }
 
