@@ -85,12 +85,12 @@ app.post("/status", (req, res) => {
 // Websocketzeug
 
 controllio.on("connection", function(socket) {
-  console.log("A user connected");
+  console.warn("User connected");
 
   controllio.clients((error, clients) => {
     if (error) throw error;
-    console.log("clients");
-    console.log(clients); // => [6em3d4TJP8Et9EMNAAAA, G5p55dHhGgUnLUctAAAB]
+    //console.log("clients");
+    //console.log(clients); // => [6em3d4TJP8Et9EMNAAAA, G5p55dHhGgUnLUctAAAB]
   });
 
   setInterval(function() {
@@ -107,17 +107,26 @@ controllio.on("connection", function(socket) {
 });
 
 cario.on("connection", function(socket) {
+  console.warn("Car connected");
+
   const newCarStatus = MakeCarStatus({
     carId: uuidv4(),
-    pos: { lat: 48.1347975, lng: 11.5424506 },
-    socket: socket.id
+    pos: { lat: 48.1347975, lng: 11.5424506 }
   });
-  state.carStatuses.push(carStatus);
-  socket.emit("id", newCarStatus.id);
+  newCarStatus.socket = socket.id;
+  state.carStatuses.push(newCarStatus);
+  socket.emit("id", newCarStatus.carId);
 
   socket.on("status", function(data) {
     newCarStatus.pos = data.pos;
     newCarStatus.state = data.state;
+  });
+
+  socket.on("disconnect", function() {
+    state.carStatuses = state.carStatuses.filter(
+      carStatus => carStatus !== newCarStatus
+    );
+    console.log(`Car ${newCarStatus.carId} disconnected`);
   });
 });
 
@@ -148,19 +157,23 @@ http.listen(3000, function() {
 const tellCabToGetPassenger = function(cabId, passenger) {
   console.log("telling " + cabId + " to go and get sb");
 
-  const cab = state.carStatuses.filter(
-    carStatus => carStatus.carId === cabId
-  )[0];
+  const cab = state.carStatuses.find(carStatus => carStatus.carId === cabId);
+
+  if (cab === null) {
+    return;
+  }
+
   const targetPos = cab.pos;
 
   cab.state = "APPROACHING";
   passenger.cabId = cabId;
+  cario.sockets.connected[cab.socket].emit("pickup", passenger);
 
-  console.log("found cab to get passenger");
-  console.log(cabId + " should get " + passenger);
+  // console.log("found cab to get passenger");
+  // console.log(cabId + " should get " + passenger);
 
-  console.log("found cab to get passenger");
-  console.log(cabId + " should get " + passenger);
+  // console.log("found cab to get passenger");
+  // console.log(cabId + " should get " + passenger);
 
   // TODO: Networking code to tell cab to go to targetPos
 };
@@ -188,13 +201,13 @@ const checkWaitingPassengers = function() {
   });
 
   if (!haveWaitingPassengers) {
-    console.log("Everybody is being served...");
+    // console.log("Everybody is being served...");
     setTimeout(checkWaitingPassengers, 5000);
     return;
   }
 
-  console.log("We have waiting customers...");
-  console.log(state.waitingPassengers);
+  // console.log("We have waiting customers...");
+  // console.log(state.waitingPassengers);
   // for passenger in waitingpassengers
   state.waitingPassengers.forEach(passenger => {
     // Don't serve passengers that already have an associated cab
@@ -206,32 +219,34 @@ const checkWaitingPassengers = function() {
     var bestCabId = -1;
 
     // find closest free cab
-    state.carStatuses.forEach(carStatus => {
-      if (carStatus.state !== "FREE") {
-        return;
-      }
+    state.carStatuses
+      .filter(carStatus => carStatus.socket)
+      .forEach(carStatus => {
+        if (carStatus.state !== "FREE") {
+          return;
+        }
 
-      const distanceToPassenger = distanceBetweenPositions(
-        carStatus.pos,
-        passenger.pos
-      );
-      if (distanceToPassenger < minDist) {
-        minDist = distanceToPassenger;
-        bestCabId = carStatus.carId;
-      }
-    });
+        const distanceToPassenger = distanceBetweenPositions(
+          carStatus.pos,
+          passenger.pos
+        );
+        if (distanceToPassenger < minDist) {
+          minDist = distanceToPassenger;
+          bestCabId = carStatus.carId;
+        }
+      });
 
     console.log("min dist: " + minDist);
     console.log("best car: " + bestCabId);
 
     // tell cab to get passenger
-    if (bestCabId > -1) {
+    if (bestCabId !== -1) {
       tellCabToGetPassenger(bestCabId, passenger);
     }
   });
 
-  console.log("We have waiting customers...");
-  console.log(state);
+  // console.log("We have waiting customers...");
+  // console.log(state);
 
   setTimeout(checkWaitingPassengers, 5000);
 };

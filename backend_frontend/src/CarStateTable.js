@@ -19,7 +19,8 @@ class CarStateTable extends Component {
       BUSY: 0,
       CHARGING: 0,
       ERROR: 0,
-      MAINTENANCE: 0
+      MAINTENANCE: 0,
+      APPROACHING: 0
     };
 
     for (let carState of this.props.carStates) {
