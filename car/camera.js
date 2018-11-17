@@ -318,7 +318,7 @@ function detectPoseInRealTime(video, net) {
         let d = new Date();
         const timeCurrent = d.getTime();
         // api call
-        if ( (lastCallTime + 20*1000) <  timeCurrent) {
+        if ( (lastCallTime + 10*1000) <  timeCurrent) {
 
           switchBool = !switchBool;
 
