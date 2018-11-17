@@ -21,9 +21,12 @@ app.get("/carStates", (req, res) => {
 io.on("connection", function(socket) {
     console.log("A user connected");
 
-    //Send a message after a timeout of 4seconds
     setInterval(function() {
         socket.emit("carStates", state.carStates);
+    }, 1000);
+
+    setInterval(function() {
+        socket.emit("waitingPassengers", state.waitingPassengers);
     }, 1000);
 
     socket.on("disconnect", function() {
@@ -31,9 +34,9 @@ io.on("connection", function(socket) {
     });
 });
 
-app.listen(3000, function() {
+http.listen(3001, function() {
+    console.log("websocket listening on 3001");
+
     const newCarState = MakeCarState();
     state.carStates.push(newCarState);
-
-    console.log("Example app listening on port 3000!");
 });
