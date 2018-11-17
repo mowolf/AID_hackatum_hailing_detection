@@ -14,5 +14,5 @@ ENV NPM_CONFIG_CACHE=/usr/.npm
 # RUN npm install
 
 ENV PORT=${port}
-CMD npm install && node index.js
+CMD npm install && npm start
 EXPOSE ${port}

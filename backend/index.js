@@ -1,4 +1,4 @@
-const CarState = require("./models/CarState.js");
+const MakeCarState = require("./models/CarState.js");
 const express = require("express");
 const app = express();
 
@@ -23,8 +23,8 @@ io.on("connection", function(socket) {
 
     //Send a message after a timeout of 4seconds
     setInterval(function() {
-        socket.send("Sent a message 4seconds after connection!");
-    }, 4000);
+        socket.emit("carStates", state.carStates);
+    }, 1000);
 
     socket.on("disconnect", function() {
         console.log("A user disconnected");
@@ -32,6 +32,8 @@ io.on("connection", function(socket) {
 });
 
 app.listen(3000, function() {
-    state.carStates.push(CarState());
+    const newCarState = MakeCarState();
+    state.carStates.push(newCarState);
+
     console.log("Example app listening on port 3000!");
 });
