@@ -4,7 +4,7 @@ const default_sate = {
 
 export default (state = default_sate, action) => {
     switch (action.type) {
-        case 'carStates':
+        case 'carStatuses':
             return {
                 ...state,
                 carStates: action.payload

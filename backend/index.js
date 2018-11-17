@@ -8,7 +8,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 
 const MakeCarStatus = require("./models/CarStatus.js");
-const MakeWaitingPassenger = require("./models/waitingPassenger.js");
+const MakeWaitingPassenger = require("./models/WaitingPassenger.js");
 
 const state = {
     carStatuses: [],
@@ -59,7 +59,7 @@ io.on("connection", function(socket) {
 
     setInterval(function() {
         socket.emit("waitingPassengers", state.waitingPassengers);
-    }, 1000);
+    }, 500);
 
     socket.on("disconnect", function() {
         console.log("A user disconnected");
