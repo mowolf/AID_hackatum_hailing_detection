@@ -1,4 +1,8 @@
-module.exports = function() {
+module.exports = function(obj) {
+    if (obj && (!obj.carId || !obj.pos)) {
+        return null;
+    }
+
     return {
         carId: "",
         pos: {
