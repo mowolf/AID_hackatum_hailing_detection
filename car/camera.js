@@ -378,21 +378,23 @@ function detectPoseInRealTime(video, net) {
         for (let y = boundingBoxTorso.minY; y < boundingBoxTorso.maxY; y += 4) {
           const colors = colorAtPixel(imgData, x, y);
 
+          if (colors.indexOf(undefined) > -1) {
+            continue;
+          }
+
           reds.push(colors[0]);
           greens.push(colors[1]);
           blues.push(colors[2]);
         }
       }
 
-      console.log(greens);
-
       const sumRed = reds.reduce((pv, cv) => pv + cv, 0);
       const sumGreen = greens.reduce((pv, cv) => pv + cv, 0);
       const sumBlue = blues.reduce((pv, cv) => pv + cv, 0);
 
-      const avgRed = sumRed / reds.length;
-      const avgGreen = sumGreen / greens.length;
-      const avgBlue = sumBlue / blues.length;
+      const avgRed = Math.floor(sumRed / reds.length);
+      const avgGreen = Math.floor(sumGreen / greens.length);
+      const avgBlue = Math.floor(sumBlue / blues.length);
 
       console.log(avgRed + "-" + avgGreen + "-" + avgBlue);
 
