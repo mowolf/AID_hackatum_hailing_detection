@@ -23,8 +23,11 @@ import {drawBoundingBox, drawKeypoints, drawSkeleton} from './demo_util';
 const videoWidth = 600;
 const videoHeight = 500;
 const stats = new Stats();
-let d = new Date();
 let lastCallTime = -60000;
+const rightMP3 = require('./sound/right.mp3');
+const nextMP3 = require('./sound/next.mp3');
+let switchBool = true;
+
 
 // state for time detection of constant action, array of true and false values
 let frameStateBooleanArray = [];
@@ -276,7 +279,7 @@ function detectPoseInRealTime(video, net) {
     // For each pose (i.e. person) detected in an image, loop through the poses
     // and draw the resulting skeleton and keypoints if over certain confidence
     // scores
-    
+
   let detectedPoses = poses.length;
 
     poses.forEach(({score, keypoints}) => {
@@ -312,20 +315,32 @@ function detectPoseInRealTime(video, net) {
       	color = 'red';
 
         // answer
-        // new Audio('/sound/Right.mp3').play()
+        let d = new Date();
+        const timeCurrent = d.getTime();
+        // api call
+        if ( (lastCallTime + 20*1000) <  timeCurrent) {
 
-        // make api call
-        if ( (lastCallTime + 60*1000) < d.getTime() ) {
+          switchBool = !switchBool;
+
+          if (switchBool) {
+            new Audio(nextMP3).play()
+          } else {
+            new Audio(rightMP3).play()
+          }
 
           const data = {colorHist: 11, pos: {lat: 48.263147, lng: 11.670846}};
 
           postData(`http://localhost:3000/waitingPassenger`, JSON.stringify(data))
-              .then(data => console.log("POST TO API")) // JSON-string from `response.json()` call
+              .then(data => console.log("POST REQUEST SENT TO API")) // JSON-string from `response.json()` call
               .catch(error => console.error(error));
 
+          d = new Date();
           lastCallTime = d.getTime();
+        } else {
+          console.log("API is NOT ready! Still in timeout.");
         }
       }
+
       frameID++;
 
       if ( frameID > framesToCheck ) {
