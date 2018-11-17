@@ -336,6 +336,25 @@ function detectPoseInRealTime(video, net) {
         Math.min(keypoints[5].position.y, keypoints[6].position.y) >
         Math.min(keypoints[10].position.y, keypoints[9].position.y);
 
+      const boundingBoxTorso = posenet.getBoundingBox([
+        keypoints[5],
+        keypoints[6],
+        keypoints[11],
+        keypoints[12]
+      ]);
+
+      console.log("bb Torso");
+      console.log(boundingBoxTorso);
+
+      // bb Torso
+      // {maxX: 326.0538139145267, maxY: 476.2216514571574, minX: 184.4496624692501, minY: 209.50693114664546}
+
+      for (let x = boundingBoxTorso.minX; x < boundingBoxTorso.maxX; x++) {
+        for (let y = boundingBoxTorso.minY; y < boundingBoxTorso.maxY; y++) {
+          // ...
+        }
+      }
+
       if (
         noseDetected &&
         eyesDetected &&
@@ -406,7 +425,10 @@ function detectPoseInRealTime(video, net) {
           drawSkeleton(keypoints, minPartConfidence, ctx, color);
         }
         if (guiState.output.showBoundingBox) {
-          drawBoundingBox(keypoints, ctx);
+          drawBoundingBox(
+            [keypoints[5], keypoints[6], keypoints[11], keypoints[12]],
+            ctx
+          );
         }
       }
     });
