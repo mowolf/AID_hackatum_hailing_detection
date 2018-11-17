@@ -30,20 +30,20 @@ services:
     networks:
       - internet_sim
 
-  #car:
-  #  build:
-  #    context: ./car
-  #    #args:
-  #    #  port: 3000
-  #  image: hackatum/car:dev
-  #  volumes:
-  #    - "./car:/usr/app:rw"
-  #  ports:
-  #    - "127.0.0.1:1234:1234"
-  #  #restart: always
-  #  user: ${CURRENT_UID}
-  #  networks:
-  #    - internet_sim
+  car:
+    build:
+      context: ./car
+      #args:
+      #  port: 3000
+    image: hackatum/car:dev
+    volumes:
+      - "./car:/usr/app:rw"
+    ports:
+      - "127.0.0.1:1234:1234"
+    #restart: always
+    user: ${CURRENT_UID}
+    networks:
+      - internet_sim
 
 
 networks:
