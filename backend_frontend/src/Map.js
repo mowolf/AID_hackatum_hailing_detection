@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Map, TileLayer, Circle } from "react-leaflet";
+import { Map, TileLayer, Circle, Popup } from "react-leaflet";
 import Leaflet from "leaflet";
 import { connect } from "react-redux";
 import "leaflet/dist/leaflet.css";
@@ -24,9 +24,34 @@ class MyMap extends Component {
           attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {carStates.length && carStates.map(carState => {
-          return carState ? <Circle center={carState.pos} radius={100} opacity={1} fillOpacity={1} stroke={false} key={carState.carId} /> : null;
-        })}
+        {carStates.length &&
+          carStates.map(carState => {
+            return carState ? (
+              <Circle
+                center={carState.pos}
+                radius={100}
+                opacity={1}
+                fillOpacity={1}
+                stroke={false}
+                key={carState.carId}
+              >
+                <Popup>
+                  <table>
+                    <tbody>
+                      <tr>
+                        <td>state</td>
+                        <td>{carState.state}</td>
+                      </tr>
+                      <tr>
+                        <td>charge</td>
+                        <td>{carState.batteryCharge.toFixed(2)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </Popup>
+              </Circle>
+            ) : null;
+          })}
       </Map>
     );
   }
