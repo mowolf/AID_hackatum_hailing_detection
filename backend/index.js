@@ -24,6 +24,34 @@ app.get("/", function(req, res) {
   res.send("Hello World!");
 });
 
+app.get("/test", function(req, res) {
+    console.log("###### test page triggered, adding test data...");
+
+    const passenger = MakeWaitingPassenger({
+        colorHist: 123,
+        pos: {
+            lat: 1.23,
+            long: 2.34
+        }
+    });
+
+    const taxi = MakeCarStatus({
+        carId: 666,
+        pos: {
+            lat: 3.33,
+            long: 4.44
+        },
+        state: "FREE", // FREE, BUSY, APPROACHING, CHARGING, ERROR, MAINTENANCE
+        change: 0.0,
+        batteryCharge: 1
+    });
+
+    state.waitingPassengers.push(passenger);
+    state.carStatuses.push(taxi);
+
+    res.send(state);
+});
+
 app.post("/waitingPassenger", (req, res) => {
   const passenger = MakeWaitingPassenger(req.body);
 
@@ -81,16 +109,89 @@ http.listen(3000, function() {
   state.carStatuses.push(newCarStatus);
 });
 
-const checkWaitingPassengers = function() {
-  if (state.waitingPassengers.length == 0) {
-    setTimeout(checkWaitingPassengers, 5000);
-    return;
-  }
+const tellCabToGetPassenger = function(cabId, passenger) {
+    console.log("telling " + cabId + " to go and get sb");
 
-  console.log("We have waiting customers...");
-  console.log(state.waitingPassengers);
+    const cab = state.carStatuses.filter(
+        carStatus => carStatus.carId === cabId
+    )[0];
+    const targetPos = cab.pos;
+
+    cab.state = "APPROACHING";
+    passenger.cabId = cabId;
+
+    console.log("found cab to get passenger");
+    console.log(cabId + " should get " + passenger);
+
+    // TODO: Networking code to tell cab to go to targetPos
+};
+
+const distanceBetweenPositions = function(posA, posB) {
+    // TODO: replace by API call to roadnav service or some other metric
+
+    const deltaLat = posA.lat - posB.lat;
+    const deltaLong = posA.long - posB.long;
+
+    return Math.sqrt(Math.pow(deltaLat, 2) + Math.pow(deltaLong, 2));
+};
+
+const checkWaitingPassengers = function() {
+    let haveWaitingPassengers = false;
+
+    state.waitingPassengers.forEach(passenger => {
+        // Don't serve passengers that already have an associated cab
+        if (!passenger.cabId) {
+            haveWaitingPassengers = true;
+            return;
+        }
+    });
+
+    if (!haveWaitingPassengers) {
+        console.log("Everybody is being served...");
+        setTimeout(checkWaitingPassengers, 5000);
+        return;
+    }
+
+    console.log("We have waiting customers...");
+    console.log(state.waitingPassengers);
+    // for passenger in waitingpassengers
+    state.waitingPassengers.forEach(passenger => {
+        // Don't serve passengers that already have an associated cab
+        if (passenger.cabId) {
+            return;
+        }
+
+        var minDist = Infinity;
+        var bestCabId = -1;
+
+        // find closest free cab
+        state.carStatuses.forEach(carStatus => {
+            if (carStatus.state !== "FREE") {
+                return;
+            }
+
+            const distanceToPassenger = distanceBetweenPositions(
+                carStatus.pos,
+                passenger.pos
+            );
+            if (distanceToPassenger < minDist) {
+                minDist = distanceToPassenger;
+                bestCabId = carStatus.carId;
+            }
+        });
+
+        console.log("min dist: " + minDist);
+        console.log("best car: " + bestCabId);
+
+        // tell cab to get passenger
+        if (bestCabId > -1) {
+            tellCabToGetPassenger(bestCabId, passenger);
+        }
+    });
+
+    console.log("We have waiting customers...");
+    console.log(state);
 
   setTimeout(checkWaitingPassengers, 5000);
 };
-
 checkWaitingPassengers();
