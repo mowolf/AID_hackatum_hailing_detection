@@ -7,13 +7,17 @@ This repository consists of the project that was developed during HackaTUM 2018.
 ## Installation
 
 1. Install
+
+
 1. Clone Project
 > `git clone https://github.com/mowolf/AID_hackatum_hailing_detection`
 
-1. Run Docker
+1. Install tmux
+1. Install and make sure Docker runs
+1. Start bash script
 > `bash dev-setup.sh`
 
-## Usage
+## Examples
 
 
 ## Dependencies
