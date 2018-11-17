@@ -224,6 +224,29 @@ function eucl_dist(keypoint1, keypoint2) {
   );
 }
 
+function getColorIndicesForCoord(x, y, width) {
+  const red = y * (width * 4) + x * 4;
+  return [red, red + 1, red + 2, red + 3];
+}
+
+function colorAtPixel(imageData, xCoord, yCoord) {
+  const colorIndices = getColorIndicesForCoord(
+    Math.floor(xCoord),
+    Math.floor(yCoord),
+    videoWidth
+  );
+
+  const redIndex = colorIndices[0];
+  const greenIndex = colorIndices[1];
+  const blueIndex = colorIndices[2];
+
+  const redForCoord = imageData.data[redIndex];
+  const greenForCoord = imageData.data[greenIndex];
+  const blueForCoord = imageData.data[blueIndex];
+
+  return [redForCoord, greenForCoord, blueForCoord];
+}
+
 function detectPoseInRealTime(video, net) {
   const canvas = document.getElementById("output");
   const ctx = canvas.getContext("2d");
@@ -343,17 +366,35 @@ function detectPoseInRealTime(video, net) {
         keypoints[12]
       ]);
 
-      console.log("bb Torso");
-      console.log(boundingBoxTorso);
-
       // bb Torso
       // {maxX: 326.0538139145267, maxY: 476.2216514571574, minX: 184.4496624692501, minY: 209.50693114664546}
 
-      for (let x = boundingBoxTorso.minX; x < boundingBoxTorso.maxX; x++) {
-        for (let y = boundingBoxTorso.minY; y < boundingBoxTorso.maxY; y++) {
-          // ...
+      const imgData = ctx.getImageData(0, 0, videoWidth, videoHeight);
+      const reds = [];
+      const greens = [];
+      const blues = [];
+
+      for (let x = boundingBoxTorso.minX; x < boundingBoxTorso.maxX; x += 4) {
+        for (let y = boundingBoxTorso.minY; y < boundingBoxTorso.maxY; y += 4) {
+          const colors = colorAtPixel(imgData, x, y);
+
+          reds.push(colors[0]);
+          greens.push(colors[1]);
+          blues.push(colors[2]);
         }
       }
+
+      console.log(greens);
+
+      const sumRed = reds.reduce((pv, cv) => pv + cv, 0);
+      const sumGreen = greens.reduce((pv, cv) => pv + cv, 0);
+      const sumBlue = blues.reduce((pv, cv) => pv + cv, 0);
+
+      const avgRed = sumRed / reds.length;
+      const avgGreen = sumGreen / greens.length;
+      const avgBlue = sumBlue / blues.length;
+
+      console.log(avgRed + "-" + avgGreen + "-" + avgBlue);
 
       if (
         noseDetected &&
