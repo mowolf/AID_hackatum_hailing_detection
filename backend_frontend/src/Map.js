@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Map, TileLayer, Circle, Popup } from "react-leaflet";
+import { Map, TileLayer, CircleMarker, Popup } from "react-leaflet";
 import Leaflet from "leaflet";
 import { connect } from "react-redux";
 import "leaflet/dist/leaflet.css";
@@ -22,15 +22,15 @@ class MyMap extends Component {
     return (
       <Map center={position} zoom={this.state.zoom}>
         <TileLayer
-          attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url="https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}{r}.png"
         />
         {carStates.length &&
           carStates.map(carState => {
             return carState ? (
-              <Circle
+              <CircleMarker
                 center={carState.pos}
-                radius={100}
+                radius={10}
                 opacity={1}
                 fillOpacity={1}
                 stroke={false}
@@ -51,15 +51,15 @@ class MyMap extends Component {
                     </tbody>
                   </table>
                 </Popup>
-              </Circle>
+              </CircleMarker>
             ) : null;
           })}
           {waitingPassengers.length &&
           waitingPassengers.map((waitingPassenger, index) => {
             return waitingPassenger ? (
-              <Circle
+              <CircleMarker
                 center={waitingPassenger.pos}
-                radius={100}
+                radius={10}
                 opacity={1}
                 fillOpacity={1}
                 stroke={false}
