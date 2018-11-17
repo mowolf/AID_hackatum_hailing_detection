@@ -3,6 +3,8 @@ module.exports = function(obj) {
         return null;
     }
 
+    obj = {};
+
     return {
         carId: obj.carId || "",
         pos: obj.pos || {
