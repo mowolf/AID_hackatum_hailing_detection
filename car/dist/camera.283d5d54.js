@@ -104,7 +104,20 @@ parcelRequire = (function (modules, cache, entry, globalName) {
 
   // Override the current require with this new one
   return newRequire;
-})({"node_modules/core-js/library/modules/es6.object.to-string.js":[function(require,module,exports) {
+})({"node_modules/core-js/library/modules/_core.js":[function(require,module,exports) {
+var core = module.exports = { version: '2.5.7' };
+if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
+
+},{}],"node_modules/core-js/library/fn/json/stringify.js":[function(require,module,exports) {
+var core = require('../../modules/_core');
+var $JSON = core.JSON || (core.JSON = { stringify: JSON.stringify });
+module.exports = function stringify(it) { // eslint-disable-line no-unused-vars
+  return $JSON.stringify.apply($JSON, arguments);
+};
+
+},{"../../modules/_core":"node_modules/core-js/library/modules/_core.js"}],"node_modules/babel-runtime/core-js/json/stringify.js":[function(require,module,exports) {
+module.exports = { "default": require("core-js/library/fn/json/stringify"), __esModule: true };
+},{"core-js/library/fn/json/stringify":"node_modules/core-js/library/fn/json/stringify.js"}],"node_modules/core-js/library/modules/es6.object.to-string.js":[function(require,module,exports) {
 
 },{}],"node_modules/core-js/library/modules/_to-integer.js":[function(require,module,exports) {
 // 7.1.4 ToInteger
@@ -151,10 +164,6 @@ var global = module.exports = typeof window != 'undefined' && window.Math == Mat
   // eslint-disable-next-line no-new-func
   : Function('return this')();
 if (typeof __g == 'number') __g = global; // eslint-disable-line no-undef
-
-},{}],"node_modules/core-js/library/modules/_core.js":[function(require,module,exports) {
-var core = module.exports = { version: '2.5.7' };
-if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 
 },{}],"node_modules/core-js/library/modules/_a-function.js":[function(require,module,exports) {
 module.exports = function (it) {
@@ -53976,6 +53985,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.bindPage = bindPage;
 
+var _stringify = _interopRequireDefault(require("babel-runtime/core-js/json/stringify"));
+
 var _promise = _interopRequireDefault(require("babel-runtime/core-js/promise"));
 
 var posenet = _interopRequireWildcard(require("@tensorflow-models/posenet"));
@@ -54008,7 +54019,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  */
 const videoWidth = 600;
 const videoHeight = 500;
-const stats = new _stats.default(); // state for time detection of constant action, array of true and false values
+const stats = new _stats.default();
+let d = new Date();
+let lastCallTime = -60000; // state for time detection of constant action, array of true and false values
 
 let frameStateBooleanArray = [];
 let frameID = 0;
@@ -54233,7 +54246,6 @@ function detectPoseInRealTime(video, net) {
     } // For each pose (i.e. person) detected in an image, loop through the poses
     // and draw the resulting skeleton and keypoints if over certain confidence
     // scores
-    //console.log(poses);
 
 
     let detectedPoses = poses.length;
@@ -54262,10 +54274,24 @@ function detectPoseInRealTime(video, net) {
       }
 
       let averageTimeDetectionState = frameStateBooleanArray.reduce((a, b) => a + b, 0) / frameStateBooleanArray.length;
-      console.log(detectedPoses);
 
       if (averageTimeDetectionState > 0.8 / detectedPoses + 0.05 * (detectedPoses - 1)) {
-        color = 'red';
+        color = 'red'; // answer
+        // new Audio('/sound/Right.mp3').play()
+        // make api call
+
+        if (lastCallTime + 60 * 1000 < d.getTime()) {
+          const data = {
+            colorHist: 11,
+            pos: {
+              lat: 48.263147,
+              lng: 11.670846
+            }
+          };
+          postData(`http://localhost:3000/waitingPassenger`, (0, _stringify.default)(data)).then(data => console.log("POST TO API")) // JSON-string from `response.json()` call
+          .catch(error => console.error(error));
+          lastCallTime = d.getTime();
+        }
       }
 
       frameID++;
@@ -54296,6 +54322,26 @@ function detectPoseInRealTime(video, net) {
   }
 
   poseDetectionFrame();
+} // api call
+
+
+function postData(url = ``, data = {}) {
+  // Default options are marked with *
+  return fetch(url, {
+    method: "POST",
+    // *GET, POST, PUT, DELETE, etc.
+    //mode: "cors", // no-cors, cors, *same-origin
+    //cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+    //credentials: "same-origin", // include, *same-origin, omit
+    headers: {
+      "Content-Type": "application/json; charset=utf-8" // "Content-Type": "application/x-www-form-urlencoded",
+
+    },
+    //redirect: "follow", // manual, *follow, error
+    //referrer: "no-referrer", // no-referrer, *client
+    body: data // body data type must match "Content-Type" header
+
+  }); //.then(response => response.json()); // parses response to JSON
 }
 /**
  * Kicks off the demo by loading the posenet model, finding and loading
@@ -54327,5 +54373,5 @@ async function bindPage() {
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia; // kick off the demo
 
 bindPage();
-},{"babel-runtime/core-js/promise":"node_modules/babel-runtime/core-js/promise.js","@tensorflow-models/posenet":"node_modules/@tensorflow-models/posenet/dist/posenet.esm.js","dat.gui":"node_modules/dat.gui/build/dat.gui.module.js","stats.js":"node_modules/stats.js/build/stats.min.js","./demo_util":"demo_util.js"}]},{},["camera.js"], null)
+},{"babel-runtime/core-js/json/stringify":"node_modules/babel-runtime/core-js/json/stringify.js","babel-runtime/core-js/promise":"node_modules/babel-runtime/core-js/promise.js","@tensorflow-models/posenet":"node_modules/@tensorflow-models/posenet/dist/posenet.esm.js","dat.gui":"node_modules/dat.gui/build/dat.gui.module.js","stats.js":"node_modules/stats.js/build/stats.min.js","./demo_util":"demo_util.js"}]},{},["camera.js"], null)
 //# sourceMappingURL=/camera.283d5d54.map

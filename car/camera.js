@@ -276,8 +276,7 @@ function detectPoseInRealTime(video, net) {
     // For each pose (i.e. person) detected in an image, loop through the poses
     // and draw the resulting skeleton and keypoints if over certain confidence
     // scores
-	//console.log(poses);
-
+    
   let detectedPoses = poses.length;
 
     poses.forEach(({score, keypoints}) => {
@@ -300,7 +299,6 @@ function detectPoseInRealTime(video, net) {
 
     const wristAboveShoulder = Math.min(keypoints[5].position.y, keypoints[6].position.y) > Math.min(keypoints[10].position.y, keypoints[9].position.y);
 
-
       if ( noseDetected && eyesDetected && ( wristAboveShoulder || armsReachedOut )&& gestureAccepted ) {
       	color = 'orange';
       	frameStateBooleanArray[frameID] = 1;
@@ -309,22 +307,25 @@ function detectPoseInRealTime(video, net) {
       }
 
       let averageTimeDetectionState = frameStateBooleanArray.reduce( (a,b) => a + b, 0) / frameStateBooleanArray.length;
-      console.log(detectedPoses)
+
       if (averageTimeDetectionState > 0.8/detectedPoses+0.05*(detectedPoses-1)) {
       	color = 'red';
-        // make api call
-        let data = {colorHist: 1 ,pos: {lat: 48.263147, long: 11.670846}};
 
-        if ( (lastCallTime + 60*1000) > d.getTime() ) {
+        // answer
+        // new Audio('/sound/Right.mp3').play()
+
+        // make api call
+        if ( (lastCallTime + 60*1000) < d.getTime() ) {
+
+          const data = {colorHist: 11, pos: {lat: 48.263147, lng: 11.670846}};
 
           postData(`http://localhost:3000/waitingPassenger`, JSON.stringify(data))
-              .then(data => console.log(data + "POST TO API")) // JSON-string from `response.json()` call
+              .then(data => console.log("POST TO API")) // JSON-string from `response.json()` call
               .catch(error => console.error(error));
 
           lastCallTime = d.getTime();
         }
       }
-
       frameID++;
 
       if ( frameID > framesToCheck ) {
@@ -359,15 +360,15 @@ function postData(url = ``, data = {}) {
   // Default options are marked with *
     return fetch(url, {
         method: "POST", // *GET, POST, PUT, DELETE, etc.
-        mode: "cors", // no-cors, cors, *same-origin
-        cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
-        credentials: "same-origin", // include, *same-origin, omit
+        //mode: "cors", // no-cors, cors, *same-origin
+        //cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+        //credentials: "same-origin", // include, *same-origin, omit
         headers: {
             "Content-Type": "application/json; charset=utf-8",
             // "Content-Type": "application/x-www-form-urlencoded",
         },
-        redirect: "follow", // manual, *follow, error
-        referrer: "no-referrer", // no-referrer, *client
+        //redirect: "follow", // manual, *follow, error
+        //referrer: "no-referrer", // no-referrer, *client
         body: data, // body data type must match "Content-Type" header
     })
     //.then(response => response.json()); // parses response to JSON
