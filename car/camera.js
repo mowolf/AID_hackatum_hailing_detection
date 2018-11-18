@@ -41,9 +41,9 @@ let lastCallTime = -60000;
 const rightMP3 = require("./sound/right.mp3");
 const nextMP3 = require("./sound/next.mp3");
 let switchBool = true;
-let samePose = true;
+let samePose = false;
 let previousDetectedPose = [];
-const minPoseSimilarityScore = 3500;
+const minPoseSimilarityScore = 3300;
 
 // state for time detection of constant action, array of true and false values
 let frameStateBooleanArray = [];
@@ -407,6 +407,7 @@ function detectPoseInRealTime(video, net) {
 
       // check pose
       const currentPose = {score, keypoints};
+
       if (previousDetectedPose.hasOwnProperty("score")) {
         samePose = (minPoseSimilarityScore >= weightedDistanceMatching(currentPose, previousDetectedPose));
         if (samePose) {
@@ -428,6 +429,9 @@ function detectPoseInRealTime(video, net) {
         const timeCurrent = d.getTime();
         // api call
         if (( (lastCallTime + 10*1000) <  timeCurrent) && !samePose) {
+          // first detection!
+          // update color
+          color = "red";
 
           // audio
           switchBool = !switchBool;
@@ -452,14 +456,13 @@ function detectPoseInRealTime(video, net) {
           // show visuals
           document.getElementById('detection').style.display = 'block';
 
+          // update pose
+          previousDetectedPose = currentPose;
+
         } else {
           if (!samePose) {console.log("WE WONT CALL YOU TWO TAXIS! SAME POSE!");}
           else {console.log("API is NOT ready! Still in timeout.");}
         }
-        // update color
-        color = "red";
-        // update pose
-        previousDetectedPose = currentPose;
       }
 
       // delete visuals
