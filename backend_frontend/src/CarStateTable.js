@@ -42,6 +42,7 @@ class CarStateTable extends Component {
             ))}
           </tbody>
         </Table>
+        {JSON.stringify(this.props.carStates)}
       </div>
     );
   }
@@ -53,7 +54,4 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect(
-  mapStateToProps,
-  {}
-)(CarStateTable);
+export default connect(mapStateToProps, {})(CarStateTable);
