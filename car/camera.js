@@ -41,6 +41,8 @@ let lastCallTime = -60000;
 const rightMP3 = require("./sound/right.mp3");
 const nextMP3 = require("./sound/next.mp3");
 let switchBool = true;
+let samePose = true;
+let previousDetectedPose = [];
 
 // state for time detection of constant action, array of true and false values
 let frameStateBooleanArray = [];
@@ -238,6 +240,36 @@ function eucl_dist(keypoint1, keypoint2) {
   );
 }
 
+// weightedDistance
+// poseVector1 and poseVector2 are 52-float vectors composed of:
+// Values 0-33: are x,y coordinates for 17 body parts in alphabetical order
+// Values 34-51: are confidence values for each of the 17 body parts in alphabetical order
+// Value 51: A sum of all the confidence values
+// Again the lower the number, the closer the distance
+function weightedDistanceMatching(pose1, pose2) {
+
+  let vector1PoseX = pose1.keypoints.map(a => a.position.x);
+  let vector1PoseY = pose1.keypoints.map(a => a.position.y);
+
+  let vector1Confidences = pose1.keypoints.map(a => a.score);
+  let vector1ConfidenceSum = pose1.score
+
+  let vector2PoseX = pose2.keypoints.map(a => a.position.x);
+  let vector2PoseY = pose2.keypoints.map(a => a.position.y);
+
+  let summation2 = 0;
+
+  for (let i = 0; i < 17; i++) {
+     summation2 += vector1Confidences[i] * (Math.abs(vector1PoseX[i] - vector2PoseX[i]) + Math.abs(vector1PoseY[i] - vector2PoseY[i]));
+    }
+
+  const weightedDistance = (1 / vector1ConfidenceSum * summation2);
+  console.log(weightedDistance);
+
+  return weightedDistance;
+}
+
+// detect pose
 function detectPoseInRealTime(video, net) {
   const canvas = document.getElementById("output");
   const ctx = canvas.getContext("2d");
@@ -350,7 +382,10 @@ function detectPoseInRealTime(video, net) {
         Math.min(keypoints[5].position.y, keypoints[6].position.y) >
         Math.min(keypoints[10].position.y, keypoints[9].position.y);
 
+      const scoreHighEnough = ( (Math.min(keypoints[5].score, keypoints[6].score) + Math.min(keypoints[9].score, keypoints[10].score)) > 0.7);
+
       if (
+        scoreHighEnough &&
         noseDetected &&
         eyesDetected &&
         (wristAboveShoulder || armsReachedOut) &&
@@ -366,13 +401,28 @@ function detectPoseInRealTime(video, net) {
         frameStateBooleanArray.reduce((a, b) => a + b, 0) /
         frameStateBooleanArray.length;
 
+      // check pose
+      const currentPose = {score, keypoints};
+      if (previousDetectedPose.hasOwnProperty("score")) {
+        samePose = (3000 >= weightedDistanceMatching(currentPose, previousDetectedPose));
+        if (samePose) {
+          console.log("SAME POSE DETECTED");
+          color = "red";
+        }  
+      }
+
       if (
-        averageTimeDetectionState >
-        0.8 / detectedPoses + 0.05 * (detectedPoses - 1)
+        (averageTimeDetectionState >
+        0.8 / detectedPoses + 0.05 * (detectedPoses - 1) ) &&
+        (samePose)
       ) {
+        // new person detected that wants to hail a stride
         color = "red";
 
-        // answer
+        // update pose
+        previousDetectedPose = currentPose;
+
+        // set api timeout time
         let d = new Date();
         const timeCurrent = d.getTime();
         // api call
