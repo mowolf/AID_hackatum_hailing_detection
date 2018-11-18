@@ -43,6 +43,7 @@ const nextMP3 = require("./sound/next.mp3");
 let switchBool = true;
 let samePose = true;
 let previousDetectedPose = [];
+const minPoseSimilarityScore = 3500;
 
 // state for time detection of constant action, array of true and false values
 let frameStateBooleanArray = [];
@@ -264,7 +265,7 @@ function weightedDistanceMatching(pose1, pose2) {
     }
 
   const weightedDistance = (1 / vector1ConfidenceSum * summation2);
-  console.log(weightedDistance);
+  //console.log(weightedDistance);
 
   return weightedDistance;
 }
@@ -346,8 +347,11 @@ function detectPoseInRealTime(video, net) {
     // scores
 
     let detectedPoses = poses.length;
+    let roundID = 1;
+    let resetPose = true;
 
     poses.forEach(({ score, keypoints }) => {
+      if (score >= minPoseConfidence) {
       let color = "aqua";
 
       // 0 (nose)
@@ -382,7 +386,7 @@ function detectPoseInRealTime(video, net) {
         Math.min(keypoints[5].position.y, keypoints[6].position.y) >
         Math.min(keypoints[10].position.y, keypoints[9].position.y);
 
-      const scoreHighEnough = ( (Math.min(keypoints[5].score, keypoints[6].score) + Math.min(keypoints[9].score, keypoints[10].score)) > 0.7);
+      const scoreHighEnough = ( (Math.min(keypoints[5].score, keypoints[6].score) + Math.min(keypoints[9].score, keypoints[10].score)) > 0.5);
 
       if (
         scoreHighEnough &&
@@ -404,29 +408,26 @@ function detectPoseInRealTime(video, net) {
       // check pose
       const currentPose = {score, keypoints};
       if (previousDetectedPose.hasOwnProperty("score")) {
-        samePose = (3000 >= weightedDistanceMatching(currentPose, previousDetectedPose));
+        samePose = (minPoseSimilarityScore >= weightedDistanceMatching(currentPose, previousDetectedPose));
         if (samePose) {
           console.log("SAME POSE DETECTED");
           color = "red";
-        }  
+          previousDetectedPose = currentPose;
+        }
       }
 
       if (
         (averageTimeDetectionState >
-        0.8 / detectedPoses + 0.05 * (detectedPoses - 1) ) &&
-        (samePose)
+        0.8 / detectedPoses + 0.05 * (detectedPoses - 1) )
+        // && (samePose)
       ) {
         // new person detected that wants to hail a stride
-        color = "red";
-
-        // update pose
-        previousDetectedPose = currentPose;
 
         // set api timeout time
         let d = new Date();
         const timeCurrent = d.getTime();
         // api call
-        if ( (lastCallTime + 10*1000) <  timeCurrent) {
+        if (( (lastCallTime + 10*1000) <  timeCurrent) && !samePose) {
 
           // audio
           switchBool = !switchBool;
@@ -452,8 +453,13 @@ function detectPoseInRealTime(video, net) {
           document.getElementById('detection').style.display = 'block';
 
         } else {
-          console.log("API is NOT ready! Still in timeout.");
+          if (!samePose) {console.log("WE WONT CALL YOU TWO TAXIS! SAME POSE!");}
+          else {console.log("API is NOT ready! Still in timeout.");}
         }
+        // update color
+        color = "red";
+        // update pose
+        previousDetectedPose = currentPose;
       }
 
       // delete visuals
@@ -470,7 +476,7 @@ function detectPoseInRealTime(video, net) {
       }
 
       // draw skeletton
-      if (score >= minPoseConfidence) {
+
         if (guiState.output.showPoints) {
           drawKeypoints(keypoints, minPartConfidence, ctx);
         }
@@ -480,7 +486,15 @@ function detectPoseInRealTime(video, net) {
         if (guiState.output.showBoundingBox) {
           drawBoundingBox(keypoints, ctx);
         }
+        // if there is no color = red in all rounds we lost our tracking and neet to reset the poses
+        if (color == "red") {
+            resetPose = false;
+        }
+        if ((roundID == detectedPoses) && (resetPose)) {
+          previousDetectedPose = [];
+        }
       }
+      roundID++;
     });
     // End monitoring code for frames per second
     stats.end();
