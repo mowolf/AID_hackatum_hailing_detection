@@ -19,18 +19,30 @@ import dat from "dat.gui";
 import Stats from "stats.js";
 import io from "socket.io-client";
 
-let id = null;
+const state = {
+  carId: null,
+  pos: { lat: 48.263147, lng: 11.670846 },
+  change: 5.0,
+  batteryCharge: 1,
+  state: "FREE"
+};
+
+let passenger;
 
 const socket = io("http://localhost:3000", { path: "/car" });
 
 socket.on("id", payload => {
   console.log("id", payload);
-  id = payload;
+  state.carId = payload;
 });
 
 socket.on("pickup", payload => {
   console.log("passenger", payload);
+  passenger = payload;
+  state.state = "APPROACHING";
 });
+
+socket.emit("status", state);
 
 import { drawBoundingBox, drawKeypoints, drawSkeleton } from "./demo_util";
 
@@ -238,7 +250,6 @@ function eucl_dist(keypoint1, keypoint2) {
   );
 }
 
-
 function getColorIndicesForCoord(x, y, width) {
   const red = y * (width * 4) + x * 4;
   return [red, red + 1, red + 2, red + 3];
@@ -385,10 +396,21 @@ function detectPoseInRealTime(video, net) {
       // {maxX: 326.0538139145267, maxY: 476.2216514571574, minX: 184.4496624692501, minY: 209.50693114664546}
 
       const imgData = ctx.getImageData(0, 0, videoWidth, videoHeight);
+
+      const red_hist = [];
+      const green_hist = [];
+      const blue_hist = [];
+
       const reds = [];
       const greens = [];
       const blues = [];
 
+      // for (var i = 0; i < 256; i++) {
+      //   red_hist[i] = 0;
+      //   green_hist[i] = 0;
+      //   blue_hist[i] = 0;
+      // }
+      // let pixel_amount = 0;
       for (let x = boundingBoxTorso.minX; x < boundingBoxTorso.maxX; x += 4) {
         for (let y = boundingBoxTorso.minY; y < boundingBoxTorso.maxY; y += 4) {
           const colors = colorAtPixel(imgData, x, y);
@@ -397,11 +419,22 @@ function detectPoseInRealTime(video, net) {
             continue;
           }
 
+          // red_hist[colors[0]] += 1;
+          // green_hist[colors[1]] += 1;
+          // blue_hist[colors[2]] += 1;
+          // pixel_amount += 1;
+
           reds.push(colors[0]);
           greens.push(colors[1]);
           blues.push(colors[2]);
         }
       }
+
+      // for (var i = 0; i < 256; i++) {
+      //   red_hist[i] = red_hist[i] / pixel_amount;
+      //   green_hist[i] = green_hist[i] / pixel_amount;
+      //   blue_hist[i] = blue_hist[i] / pixel_amount;
+      // }
 
       const sumRed = reds.reduce((pv, cv) => pv + cv, 0);
       const sumGreen = greens.reduce((pv, cv) => pv + cv, 0);
@@ -411,7 +444,10 @@ function detectPoseInRealTime(video, net) {
       const avgGreen = Math.floor(sumGreen / greens.length);
       const avgBlue = Math.floor(sumBlue / blues.length);
 
-      console.log(avgRed + "-" + avgGreen + "-" + avgBlue);
+      const colorHist = [avgRed, avgGreen, avgBlue];
+
+      //console.log(colorHist[0].join(";"));
+      // console.log([avgRed, avgGreen, avgBlue].join(";"));
 
       if (
         noseDetected &&
@@ -433,6 +469,8 @@ function detectPoseInRealTime(video, net) {
         averageTimeDetectionState >
         0.8 / detectedPoses + 0.05 * (detectedPoses - 1)
       ) {
+        // if state.state === "APPROACHING" and close to target => check color hist
+
         color = "red";
 
         // answer
@@ -440,14 +478,28 @@ function detectPoseInRealTime(video, net) {
         const timeCurrent = d.getTime();
         // api call
         if (lastCallTime + 10 * 1000 < timeCurrent) {
-          // audio
-          switchBool = !switchBool;
-          if (switchBool) {
+          if (
+            state.state === "FREE" ||
+            (state.state === "APPROACHING" &&
+              checkHisto(
+                passenger.colorHist,
+                colorHist
+              )) /* TODO and close to target */
+          ) {
+            if (state.state === "APPROACHING") {
+              // TODO tell api to delete user
+              passenger = null;
+            }
+            state.state = "BUSY";
+            // audio
+            new Audio(rightMP3).play();
+            socket.emit("status", state);
+          } else if (state.state !== "FREE") {
             new Audio(nextMP3).play();
 
             // send API
             const data = {
-              colorHist: 11,
+              colorHist,
               pos: { lat: 48.263147, lng: 11.670846 }
             };
             postData(
@@ -456,12 +508,6 @@ function detectPoseInRealTime(video, net) {
             )
               .then(data => console.log("POST REQUEST SENT TO API")) // JSON-string from `response.json()` call
               .catch(error => console.error(error));
-          } else {
-            new Audio(rightMP3).play();
-            socket.emit("status", {
-              state: "BUSY",
-              pos: { lat: 48.263147, lng: 11.670846 }
-            });
           }
 
           // timeout for API
@@ -511,6 +557,16 @@ function detectPoseInRealTime(video, net) {
   }
 
   poseDetectionFrame();
+}
+
+function checkHisto(hist1, hist2) {
+  const diff = Math.sqrt(
+    Math.pow(hist1[0] - hist2[0], 2) +
+      Math.pow(hist1[1] - hist2[1], 2) +
+      Math.pow(hist1[2] - hist2[2], 2)
+  );
+  console.log("diff", diff); //jhg
+  return diff <= 70;
 }
 
 // api call
