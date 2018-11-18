@@ -3,7 +3,7 @@
 
 by: [hobbeshunter](https://github.com/hobbeshunter) [whateverforever](https://github.com/whateverforever) [asakhnenko](https://github.com/asakhnenko) [t1llr1cht3r](https://github.com/t1llr1cht3r) [mowolf](https://github.com/mowolf) 
 
-This repository hosts the project that was developed during HackaTUM 2018. The aim of the project is to improve the user experience by allowing interactions with autonomous cabs through simple gestures. The cab will detect the passenger and offer a ride. In case the cab is currently unavailable, it sends a signal to a back-end server to send the next available cab to this area.
+This repository hosts the project that was developed during HackaTUM 2018 during 36 hours. The aim of the project is to improve the user experience by allowing interactions with autonomous cabs through simple gestures. The cab will detect the passenger and offer a ride. In case the cab is currently unavailable, it sends a signal to a back-end server to send the next available cab to this area.
 
 ## Installation
 
