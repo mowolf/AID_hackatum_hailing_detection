@@ -110,6 +110,11 @@ cario.on("connection", function(socket) {
     newCarStatus.state = data.state;
   });
 
+  socket.on("servedPassenger", function(data) {
+    state.waitingPassengers = state.waitingPassengers.filter(passenger => passenger.id !== data.id);
+    console.log("Passenger served");
+  });
+
   socket.on("disconnect", function() {
     state.carStatuses = state.carStatuses.filter(
       carStatus => carStatus !== newCarStatus

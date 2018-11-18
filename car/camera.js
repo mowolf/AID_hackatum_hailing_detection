@@ -18,6 +18,7 @@ import * as posenet from "@tensorflow-models/posenet";
 import dat from "dat.gui";
 import Stats from "stats.js";
 import io from "socket.io-client";
+import { drawBoundingBox, drawKeypoints, drawSkeleton } from "./demo_util";
 
 const state = {
   carId: null,
@@ -43,8 +44,6 @@ socket.on("pickup", payload => {
 });
 
 socket.emit("status", state);
-
-import { drawBoundingBox, drawKeypoints, drawSkeleton } from "./demo_util";
 
 const videoWidth = 600;
 const videoHeight = 500;
@@ -260,12 +259,11 @@ function eucl_dist(keypoint1, keypoint2) {
 // Value 51: A sum of all the confidence values
 // Again the lower the number, the closer the distance
 function weightedDistanceMatching(pose1, pose2) {
-
   let vector1PoseX = pose1.keypoints.map(a => a.position.x);
   let vector1PoseY = pose1.keypoints.map(a => a.position.y);
 
   let vector1Confidences = pose1.keypoints.map(a => a.score);
-  let vector1ConfidenceSum = pose1.score
+  let vector1ConfidenceSum = pose1.score;
 
   let vector2PoseX = pose2.keypoints.map(a => a.position.x);
   let vector2PoseY = pose2.keypoints.map(a => a.position.y);
@@ -273,10 +271,13 @@ function weightedDistanceMatching(pose1, pose2) {
   let summation2 = 0;
 
   for (let i = 0; i < 17; i++) {
-     summation2 += vector1Confidences[i] * (Math.abs(vector1PoseX[i] - vector2PoseX[i]) + Math.abs(vector1PoseY[i] - vector2PoseY[i]));
-    }
+    summation2 +=
+      vector1Confidences[i] *
+      (Math.abs(vector1PoseX[i] - vector2PoseX[i]) +
+        Math.abs(vector1PoseY[i] - vector2PoseY[i]));
+  }
 
-  const weightedDistance = (1 / vector1ConfidenceSum * summation2);
+  const weightedDistance = (1 / vector1ConfidenceSum) * summation2;
   //console.log(weightedDistance);
 
   return weightedDistance;
@@ -387,200 +388,219 @@ function detectPoseInRealTime(video, net) {
 
     poses.forEach(({ score, keypoints }) => {
       if (score >= minPoseConfidence) {
-      let color = "aqua";
+        let color = "aqua";
 
-      // 0 (nose)
-      //left: 5 (shoulder), 7 (elbow), 9 (wrist) --- 1, (eye), 3 (ear),
-      //right: 6 (shoulder), 8 (elbow), 10 (wrist) --- 2(eye),4 (ear),
+        // 0 (nose)
+        //left: 5 (shoulder), 7 (elbow), 9 (wrist) --- 1, (eye), 3 (ear),
+        //right: 6 (shoulder), 8 (elbow), 10 (wrist) --- 2(eye),4 (ear),
 
-      const armLength =
-        eucl_dist(keypoints[5], keypoints[7]) +
-        eucl_dist(keypoints[7], keypoints[9]);
-      const distanceXShoulderToWrist = Math.max(
-        keypoints[9].position.x - keypoints[5].position.x,
-        keypoints[6].position.x - keypoints[10].position.x
-      );
-      const armsReachedOut = distanceXShoulderToWrist > 0.8 * armLength;
+        const armLength =
+          eucl_dist(keypoints[5], keypoints[7]) +
+          eucl_dist(keypoints[7], keypoints[9]);
+        const distanceXShoulderToWrist = Math.max(
+          keypoints[9].position.x - keypoints[5].position.x,
+          keypoints[6].position.x - keypoints[10].position.x
+        );
+        const armsReachedOut = distanceXShoulderToWrist > 0.8 * armLength;
 
-      const distanceYShoulderToNose = Math.abs(
-        keypoints[0].position.y -
-          0.5 * (keypoints[5].position.y + keypoints[6].position.y)
-      );
-      const gestureAccepted =
-        Math.max(
-          Math.abs(keypoints[9].position.x - keypoints[0].position.x),
-          keypoints[10].position.x - keypoints[0].position.x
-        ) > distanceYShoulderToNose;
+        const distanceYShoulderToNose = Math.abs(
+          keypoints[0].position.y -
+            0.5 * (keypoints[5].position.y + keypoints[6].position.y)
+        );
+        const gestureAccepted =
+          Math.max(
+            Math.abs(keypoints[9].position.x - keypoints[0].position.x),
+            keypoints[10].position.x - keypoints[0].position.x
+          ) > distanceYShoulderToNose;
 
-      const noseDetected = keypoints[0].score > minPartConfidence;
-      const eyesDetected =
-        keypoints[1].score > minPartConfidence &&
-        keypoints[2].score > minPartConfidence;
+        const noseDetected = keypoints[0].score > minPartConfidence;
+        const eyesDetected =
+          keypoints[1].score > minPartConfidence &&
+          keypoints[2].score > minPartConfidence;
 
-      const wristAboveShoulder =
-        Math.min(keypoints[5].position.y, keypoints[6].position.y) >
-        Math.min(keypoints[10].position.y, keypoints[9].position.y);
+        const wristAboveShoulder =
+          Math.min(keypoints[5].position.y, keypoints[6].position.y) >
+          Math.min(keypoints[10].position.y, keypoints[9].position.y);
 
-      const scoreHighEnough = ( (Math.min(keypoints[5].score, keypoints[6].score) + Math.min(keypoints[9].score, keypoints[10].score)) > 0.5);
-      const boundingBoxTorso = posenet.getBoundingBox([
-        keypoints[5],
-        keypoints[6],
-        keypoints[11],
-        keypoints[12]
-      ]);
+        const scoreHighEnough =
+          Math.min(keypoints[5].score, keypoints[6].score) +
+            Math.min(keypoints[9].score, keypoints[10].score) >
+          0.5;
+        const boundingBoxTorso = posenet.getBoundingBox([
+          keypoints[5],
+          keypoints[6],
+          keypoints[11],
+          keypoints[12]
+        ]);
 
-      // bb Torso
-      // {maxX: 326.0538139145267, maxY: 476.2216514571574, minX: 184.4496624692501, minY: 209.50693114664546}
+        // bb Torso
+        // {maxX: 326.0538139145267, maxY: 476.2216514571574, minX: 184.4496624692501, minY: 209.50693114664546}
 
-      const imgData = ctx.getImageData(0, 0, videoWidth, videoHeight);
+        const imgData = ctx.getImageData(0, 0, videoWidth, videoHeight);
 
-      const red_hist = [];
-      const green_hist = [];
-      const blue_hist = [];
+        const red_hist = [];
+        const green_hist = [];
+        const blue_hist = [];
 
-      const reds = [];
-      const greens = [];
-      const blues = [];
+        const reds = [];
+        const greens = [];
+        const blues = [];
 
-      // for (var i = 0; i < 256; i++) {
-      //   red_hist[i] = 0;
-      //   green_hist[i] = 0;
-      //   blue_hist[i] = 0;
-      // }
-      // let pixel_amount = 0;
-      for (let x = boundingBoxTorso.minX; x < boundingBoxTorso.maxX; x += 4) {
-        for (let y = boundingBoxTorso.minY; y < boundingBoxTorso.maxY; y += 4) {
-          const colors = colorAtPixel(imgData, x, y);
-
-          if (colors.indexOf(undefined) > -1) {
-            continue;
-          }
-
-          // red_hist[colors[0]] += 1;
-          // green_hist[colors[1]] += 1;
-          // blue_hist[colors[2]] += 1;
-          // pixel_amount += 1;
-
-          reds.push(colors[0]);
-          greens.push(colors[1]);
-          blues.push(colors[2]);
-        }
-      }
-
-      // for (var i = 0; i < 256; i++) {
-      //   red_hist[i] = red_hist[i] / pixel_amount;
-      //   green_hist[i] = green_hist[i] / pixel_amount;
-      //   blue_hist[i] = blue_hist[i] / pixel_amount;
-      // }
-
-      const sumRed = reds.reduce((pv, cv) => pv + cv, 0);
-      const sumGreen = greens.reduce((pv, cv) => pv + cv, 0);
-      const sumBlue = blues.reduce((pv, cv) => pv + cv, 0);
-
-      const avgRed = Math.floor(sumRed / reds.length);
-      const avgGreen = Math.floor(sumGreen / greens.length);
-      const avgBlue = Math.floor(sumBlue / blues.length);
-
-      const colorHist = [avgRed, avgGreen, avgBlue];
-
-      //console.log(colorHist[0].join(";"));
-      // console.log([avgRed, avgGreen, avgBlue].join(";"));
-
-      if (
-        scoreHighEnough &&
-        noseDetected &&
-        eyesDetected &&
-        (wristAboveShoulder || armsReachedOut) &&
-        gestureAccepted
-      ) {
-        color = "orange";
-        frameStateBooleanArray[frameID] = 1;
-      } else {
-        frameStateBooleanArray[frameID] = 0;
-      }
-
-      let averageTimeDetectionState =
-        frameStateBooleanArray.reduce((a, b) => a + b, 0) /
-        frameStateBooleanArray.length;
-
-      // check pose
-      const currentPose = {score, keypoints};
-
-      if (previousDetectedPose.hasOwnProperty("score")) {
-        samePose = (minPoseSimilarityScore >= weightedDistanceMatching(currentPose, previousDetectedPose));
-        if (samePose) {
-          console.log("SAME POSE DETECTED");
-          color = "red";
-          previousDetectedPose = currentPose;
-        }
-      }
-
-      if (
-        (averageTimeDetectionState >
-        0.8 / detectedPoses + 0.05 * (detectedPoses - 1) )
-        // && (samePose)
-      ) {
-        color = "red";
-
-        // set api timeout time
-        let d = new Date();
-        const timeCurrent = d.getTime();
-        // api call
-        if (lastCallTime + 10 * 1000 < timeCurrent) {
-          if (
-            state.state === "FREE" ||
-            (state.state === "APPROACHING" &&
-              checkHisto(
-                passenger.colorHist,
-                colorHist
-              )) /* TODO and close to target */
+        // for (var i = 0; i < 256; i++) {
+        //   red_hist[i] = 0;
+        //   green_hist[i] = 0;
+        //   blue_hist[i] = 0;
+        // }
+        // let pixel_amount = 0;
+        for (let x = boundingBoxTorso.minX; x < boundingBoxTorso.maxX; x += 4) {
+          for (
+            let y = boundingBoxTorso.minY;
+            y < boundingBoxTorso.maxY;
+            y += 4
           ) {
-            if (state.state === "APPROACHING") {
-              // TODO tell api to delete user
-              passenger = null;
+            const colors = colorAtPixel(imgData, x, y);
+
+            if (colors.indexOf(undefined) > -1) {
+              continue;
             }
-            state.state = "BUSY";
-            // audio
-            new Audio(rightMP3).play();
-            socket.emit("status", state);
-          } else if (state.state !== "FREE") {
-            new Audio(nextMP3).play();
 
-            // send API
-            const data = {
-              colorHist,
+            // red_hist[colors[0]] += 1;
+            // green_hist[colors[1]] += 1;
+            // blue_hist[colors[2]] += 1;
+            // pixel_amount += 1;
+
+            reds.push(colors[0]);
+            greens.push(colors[1]);
+            blues.push(colors[2]);
           }
-
-          // timeout for API
-          d = new Date();
-          lastCallTime = d.getTime();
-
-          // show visuals
-          document.getElementById('detection').style.display = 'block';
-
-          // update pose
-          previousDetectedPose = currentPose;
-
-        } else {
-          if (!samePose) {console.log("WE WONT CALL YOU TWO TAXIS! SAME POSE!");}
-          else {console.log("API is NOT ready! Still in timeout.");}
         }
-      }
 
-      // delete visuals
-      const d2 = new Date();
-      const timeCurrentFrame = d2.getTime();
-      if (lastCallTime + 2000 < timeCurrentFrame) {
-        document.getElementById("detection").style.display = "none";
-      }
+        // for (var i = 0; i < 256; i++) {
+        //   red_hist[i] = red_hist[i] / pixel_amount;
+        //   green_hist[i] = green_hist[i] / pixel_amount;
+        //   blue_hist[i] = blue_hist[i] / pixel_amount;
+        // }
 
-      // update Frame ID
-      frameID++;
-      if (frameID > framesToCheck) {
-        frameID = 0;
-      }
+        const sumRed = reds.reduce((pv, cv) => pv + cv, 0);
+        const sumGreen = greens.reduce((pv, cv) => pv + cv, 0);
+        const sumBlue = blues.reduce((pv, cv) => pv + cv, 0);
 
-      // draw skeletton
+        const avgRed = Math.floor(sumRed / reds.length);
+        const avgGreen = Math.floor(sumGreen / greens.length);
+        const avgBlue = Math.floor(sumBlue / blues.length);
+
+        const colorHist = [avgRed, avgGreen, avgBlue];
+
+        //console.log(colorHist[0].join(";"));
+        // console.log([avgRed, avgGreen, avgBlue].join(";"));
+
+        if (
+          scoreHighEnough &&
+          noseDetected &&
+          eyesDetected &&
+          (wristAboveShoulder || armsReachedOut) &&
+          gestureAccepted
+        ) {
+          color = "orange";
+          frameStateBooleanArray[frameID] = 1;
+        } else {
+          frameStateBooleanArray[frameID] = 0;
+        }
+
+        let averageTimeDetectionState =
+          frameStateBooleanArray.reduce((a, b) => a + b, 0) /
+          frameStateBooleanArray.length;
+
+        // check pose
+        const currentPose = { score, keypoints };
+
+        if (previousDetectedPose.hasOwnProperty("score")) {
+          samePose =
+            minPoseSimilarityScore >=
+            weightedDistanceMatching(currentPose, previousDetectedPose);
+          if (samePose) {
+            console.log("SAME POSE DETECTED");
+            color = "red";
+            previousDetectedPose = currentPose;
+          }
+        }
+
+        if (
+          averageTimeDetectionState >
+          0.8 / detectedPoses + 0.05 * (detectedPoses - 1)
+          // && (samePose)
+        ) {
+          color = "red";
+
+          // set api timeout time
+          let d = new Date();
+          const timeCurrent = d.getTime();
+          // api call
+          if (lastCallTime + 10 * 1000 < timeCurrent) {
+            if (
+              state.state === "FREE" ||
+              (state.state === "APPROACHING" &&
+                checkHisto(
+                  passenger.colorHist,
+                  colorHist
+                )) /* TODO and close to target */
+            ) {
+              if (state.state === "APPROACHING") {
+                socket.emit("servedPassenger", passenger);
+                passenger = null;
+              }
+              state.state = "BUSY";
+              // audio
+              new Audio(rightMP3).play();
+              socket.emit("status", state);
+            } else if (state.state !== "FREE") {
+              new Audio(nextMP3).play();
+
+              // send API
+              const data = {
+                colorHist: 11,
+                pos: { lat: 48.263147, lng: 11.670846 }
+              };
+              postData(
+                `http://localhost:3000/waitingPassenger`,
+                JSON.stringify(data)
+              )
+                .then(data => console.log("POST REQUEST SENT TO API")) // JSON-string from `response.json()` call
+                .catch(error => console.error(error));
+            }
+
+            // timeout for API
+            d = new Date();
+            lastCallTime = d.getTime();
+
+            // show visuals
+            document.getElementById("detection").style.display = "block";
+
+            // update pose
+            previousDetectedPose = currentPose;
+          } else {
+            if (!samePose) {
+              console.log("WE WONT CALL YOU TWO TAXIS! SAME POSE!");
+            } else {
+              console.log("API is NOT ready! Still in timeout.");
+            }
+          }
+        }
+
+        // delete visuals
+        const d2 = new Date();
+        const timeCurrentFrame = d2.getTime();
+        if (lastCallTime + 2000 < timeCurrentFrame) {
+          document.getElementById("detection").style.display = "none";
+        }
+
+        // update Frame ID
+        frameID++;
+        if (frameID > framesToCheck) {
+          frameID = 0;
+        }
+
+        // draw skeletton
 
         if (guiState.output.showPoints) {
           drawKeypoints(keypoints, minPartConfidence, ctx);
@@ -596,9 +616,9 @@ function detectPoseInRealTime(video, net) {
         }
         // if there is no color = red in all rounds we lost our tracking and neet to reset the poses
         if (color == "red") {
-            resetPose = false;
+          resetPose = false;
         }
-        if ((roundID == detectedPoses) && (resetPose)) {
+        if (roundID == detectedPoses && resetPose) {
           previousDetectedPose = [];
         }
       }
