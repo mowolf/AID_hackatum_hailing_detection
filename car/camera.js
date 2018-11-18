@@ -17,6 +17,20 @@
 import * as posenet from "@tensorflow-models/posenet";
 import dat from "dat.gui";
 import Stats from "stats.js";
+import io from "socket.io-client";
+
+let id = null;
+
+const socket = io("http://localhost:3000", { path: "/car" });
+
+socket.on("id", payload => {
+  console.log("id", payload);
+  id = payload;
+});
+
+socket.on("pickup", payload => {
+  console.log("passenger", payload);
+});
 
 import { drawBoundingBox, drawKeypoints, drawSkeleton } from "./demo_util";
 
@@ -224,6 +238,7 @@ function eucl_dist(keypoint1, keypoint2) {
   );
 }
 
+
 function getColorIndicesForCoord(x, y, width) {
   const red = y * (width * 4) + x * 4;
   return [red, red + 1, red + 2, red + 3];
@@ -424,42 +439,56 @@ function detectPoseInRealTime(video, net) {
         let d = new Date();
         const timeCurrent = d.getTime();
         // api call
-        if (lastCallTime + 20 * 1000 < timeCurrent) {
+        if (lastCallTime + 10 * 1000 < timeCurrent) {
+          // audio
           switchBool = !switchBool;
-
           if (switchBool) {
             new Audio(nextMP3).play();
+
+            // send API
+            const data = {
+              colorHist: 11,
+              pos: { lat: 48.263147, lng: 11.670846 }
+            };
+            postData(
+              `http://localhost:3000/waitingPassenger`,
+              JSON.stringify(data)
+            )
+              .then(data => console.log("POST REQUEST SENT TO API")) // JSON-string from `response.json()` call
+              .catch(error => console.error(error));
           } else {
             new Audio(rightMP3).play();
+            socket.emit("status", {
+              state: "BUSY",
+              pos: { lat: 48.263147, lng: 11.670846 }
+            });
           }
 
-          const data = {
-            colorHist: 11,
-            pos: { lat: 48.263147, lng: 11.670846 }
-          };
-
-          postData(
-            `http://localhost:3000/waitingPassenger`,
-            JSON.stringify(data)
-          )
-            .then(data => console.log("POST REQUEST SENT TO API")) // JSON-string from `response.json()` call
-            .catch(error => console.error(error));
-
+          // timeout for API
           d = new Date();
           lastCallTime = d.getTime();
+
+          // show visuals
+          document.getElementById("detection").style.display = "block";
         } else {
           console.log("API is NOT ready! Still in timeout.");
         }
       }
 
-      frameID++;
+      // delete visuals
+      const d2 = new Date();
+      const timeCurrentFrame = d2.getTime();
+      if (lastCallTime + 2000 < timeCurrentFrame) {
+        document.getElementById("detection").style.display = "none";
+      }
 
+      // update Frame ID
+      frameID++;
       if (frameID > framesToCheck) {
         frameID = 0;
       }
 
-      // wrist higher then elobow
-      //keypoints[10].position.y < keypoints[8].position.y
+      // draw skeletton
       if (score >= minPoseConfidence) {
         if (guiState.output.showPoints) {
           drawKeypoints(keypoints, minPartConfidence, ctx);

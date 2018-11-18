@@ -22,7 +22,8 @@ const MapWrapper = styled.div`
 `;
 
 const StatsWrapper = styled.div`
-  background-color: #95a5a6;
+  background-color: #2c3e50;
+  color: #ecf0f1;
   flex: 1;
   padding: 10px;
   max-width: 50%;
