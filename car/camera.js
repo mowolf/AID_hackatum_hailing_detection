@@ -439,14 +439,22 @@ function detectPoseInRealTime(video, net) {
             new Audio(nextMP3).play();
 
             // send API
-            const data = {colorHist: 11, pos: {lat: 48.263147, lng: 11.670846}};
-            postData(`http://localhost:3000/waitingPassenger`, JSON.stringify(data))
-                .then(data => console.log("POST REQUEST SENT TO API")) // JSON-string from `response.json()` call
-                .catch(error => console.error(error));
-
+            const data = {
+              colorHist: 11,
+              pos: { lat: 48.263147, lng: 11.670846 }
+            };
+            postData(
+              `http://localhost:3000/waitingPassenger`,
+              JSON.stringify(data)
+            )
+              .then(data => console.log("POST REQUEST SENT TO API")) // JSON-string from `response.json()` call
+              .catch(error => console.error(error));
           } else {
             new Audio(rightMP3).play();
-            socket.emit("status", {state: "BUSY", pos: { lat: 48.263147, lng: 11.670846 }});
+            socket.emit("status", {
+              state: "BUSY",
+              pos: { lat: 48.263147, lng: 11.670846 }
+            });
           }
 
           // timeout for API
@@ -469,13 +477,13 @@ function detectPoseInRealTime(video, net) {
       const d2 = new Date();
       const timeCurrentFrame = d2.getTime();
       if (lastCallTime + 2000 < timeCurrentFrame) {
-        document.getElementById('detection').style.display = 'none';
+        document.getElementById("detection").style.display = "none";
       }
 
       // update Frame ID
       frameID++;
-      if ( frameID > framesToCheck ) {
-      	frameID = 0;
+      if (frameID > framesToCheck) {
+        frameID = 0;
       }
 
       // draw skeletton
