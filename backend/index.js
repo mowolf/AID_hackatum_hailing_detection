@@ -224,8 +224,8 @@ const checkWaitingPassengers = function() {
         }
       });
 
-    console.log("min dist: " + minDist);
-    console.log("best car: " + bestCabId);
+    // console.log("min dist: " + minDist);
+    // console.log("best car: " + bestCabId); // asdf
 
     // tell cab to get passenger
     if (bestCabId !== -1) {

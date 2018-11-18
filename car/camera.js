@@ -19,18 +19,30 @@ import dat from "dat.gui";
 import Stats from "stats.js";
 import io from "socket.io-client";
 
-let id = null;
+const state = {
+  carId: null,
+  pos: { lat: 48.263147, lng: 11.670846 },
+  change: 5.0,
+  batteryCharge: 1,
+  state: "FREE"
+};
+
+let passenger;
 
 const socket = io("http://localhost:3000", { path: "/car" });
 
 socket.on("id", payload => {
   console.log("id", payload);
-  id = payload;
+  state.carId = payload;
 });
 
 socket.on("pickup", payload => {
   console.log("passenger", payload);
+  passenger = payload;
+  state.state = "APPROACHING";
 });
+
+socket.emit("status", state);
 
 import { drawBoundingBox, drawKeypoints, drawSkeleton } from "./demo_util";
 
@@ -271,6 +283,29 @@ function weightedDistanceMatching(pose1, pose2) {
 }
 
 // detect pose
+function getColorIndicesForCoord(x, y, width) {
+  const red = y * (width * 4) + x * 4;
+  return [red, red + 1, red + 2, red + 3];
+}
+
+function colorAtPixel(imageData, xCoord, yCoord) {
+  const colorIndices = getColorIndicesForCoord(
+    Math.floor(xCoord),
+    Math.floor(yCoord),
+    videoWidth
+  );
+
+  const redIndex = colorIndices[0];
+  const greenIndex = colorIndices[1];
+  const blueIndex = colorIndices[2];
+
+  const redForCoord = imageData.data[redIndex];
+  const greenForCoord = imageData.data[greenIndex];
+  const blueForCoord = imageData.data[blueIndex];
+
+  return [redForCoord, greenForCoord, blueForCoord];
+}
+
 function detectPoseInRealTime(video, net) {
   const canvas = document.getElementById("output");
   const ctx = canvas.getContext("2d");
@@ -387,6 +422,69 @@ function detectPoseInRealTime(video, net) {
         Math.min(keypoints[10].position.y, keypoints[9].position.y);
 
       const scoreHighEnough = ( (Math.min(keypoints[5].score, keypoints[6].score) + Math.min(keypoints[9].score, keypoints[10].score)) > 0.5);
+      const boundingBoxTorso = posenet.getBoundingBox([
+        keypoints[5],
+        keypoints[6],
+        keypoints[11],
+        keypoints[12]
+      ]);
+
+      // bb Torso
+      // {maxX: 326.0538139145267, maxY: 476.2216514571574, minX: 184.4496624692501, minY: 209.50693114664546}
+
+      const imgData = ctx.getImageData(0, 0, videoWidth, videoHeight);
+
+      const red_hist = [];
+      const green_hist = [];
+      const blue_hist = [];
+
+      const reds = [];
+      const greens = [];
+      const blues = [];
+
+      // for (var i = 0; i < 256; i++) {
+      //   red_hist[i] = 0;
+      //   green_hist[i] = 0;
+      //   blue_hist[i] = 0;
+      // }
+      // let pixel_amount = 0;
+      for (let x = boundingBoxTorso.minX; x < boundingBoxTorso.maxX; x += 4) {
+        for (let y = boundingBoxTorso.minY; y < boundingBoxTorso.maxY; y += 4) {
+          const colors = colorAtPixel(imgData, x, y);
+
+          if (colors.indexOf(undefined) > -1) {
+            continue;
+          }
+
+          // red_hist[colors[0]] += 1;
+          // green_hist[colors[1]] += 1;
+          // blue_hist[colors[2]] += 1;
+          // pixel_amount += 1;
+
+          reds.push(colors[0]);
+          greens.push(colors[1]);
+          blues.push(colors[2]);
+        }
+      }
+
+      // for (var i = 0; i < 256; i++) {
+      //   red_hist[i] = red_hist[i] / pixel_amount;
+      //   green_hist[i] = green_hist[i] / pixel_amount;
+      //   blue_hist[i] = blue_hist[i] / pixel_amount;
+      // }
+
+      const sumRed = reds.reduce((pv, cv) => pv + cv, 0);
+      const sumGreen = greens.reduce((pv, cv) => pv + cv, 0);
+      const sumBlue = blues.reduce((pv, cv) => pv + cv, 0);
+
+      const avgRed = Math.floor(sumRed / reds.length);
+      const avgGreen = Math.floor(sumGreen / greens.length);
+      const avgBlue = Math.floor(sumBlue / blues.length);
+
+      const colorHist = [avgRed, avgGreen, avgBlue];
+
+      //console.log(colorHist[0].join(";"));
+      // console.log([avgRed, avgGreen, avgBlue].join(";"));
 
       if (
         scoreHighEnough &&
@@ -422,39 +520,35 @@ function detectPoseInRealTime(video, net) {
         0.8 / detectedPoses + 0.05 * (detectedPoses - 1) )
         // && (samePose)
       ) {
-        // new person detected that wants to hail a stride
+        color = "red";
 
         // set api timeout time
         let d = new Date();
         const timeCurrent = d.getTime();
         // api call
-        if (( (lastCallTime + 10*1000) <  timeCurrent) && !samePose) {
-          // first detection!
-          // update color
-          color = "red";
-
-          // audio
-          switchBool = !switchBool;
-          if (switchBool) {
+        if (lastCallTime + 10 * 1000 < timeCurrent) {
+          if (
+            state.state === "FREE" ||
+            (state.state === "APPROACHING" &&
+              checkHisto(
+                passenger.colorHist,
+                colorHist
+              )) /* TODO and close to target */
+          ) {
+            if (state.state === "APPROACHING") {
+              // TODO tell api to delete user
+              passenger = null;
+            }
+            state.state = "BUSY";
+            // audio
+            new Audio(rightMP3).play();
+            socket.emit("status", state);
+          } else if (state.state !== "FREE") {
             new Audio(nextMP3).play();
 
             // send API
             const data = {
-              colorHist: 11,
-              pos: { lat: 48.263147, lng: 11.670846 }
-            };
-            postData(
-              `http://localhost:3000/waitingPassenger`,
-              JSON.stringify(data)
-            )
-              .then(data => console.log("POST REQUEST SENT TO API")) // JSON-string from `response.json()` call
-              .catch(error => console.error(error));
-          } else {
-            new Audio(rightMP3).play();
-            socket.emit("status", {
-              state: "BUSY",
-              pos: { lat: 48.263147, lng: 11.670846 }
-            });
+              colorHist,
           }
 
           // timeout for API
@@ -495,7 +589,10 @@ function detectPoseInRealTime(video, net) {
           drawSkeleton(keypoints, minPartConfidence, ctx, color);
         }
         if (guiState.output.showBoundingBox) {
-          drawBoundingBox(keypoints, ctx);
+          drawBoundingBox(
+            [keypoints[5], keypoints[6], keypoints[11], keypoints[12]],
+            ctx
+          );
         }
         // if there is no color = red in all rounds we lost our tracking and neet to reset the poses
         if (color == "red") {
@@ -514,6 +611,16 @@ function detectPoseInRealTime(video, net) {
   }
 
   poseDetectionFrame();
+}
+
+function checkHisto(hist1, hist2) {
+  const diff = Math.sqrt(
+    Math.pow(hist1[0] - hist2[0], 2) +
+      Math.pow(hist1[1] - hist2[1], 2) +
+      Math.pow(hist1[2] - hist2[2], 2)
+  );
+  console.log("diff", diff); //jhg
+  return diff <= 70;
 }
 
 // api call
