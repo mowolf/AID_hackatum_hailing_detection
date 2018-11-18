@@ -277,7 +277,7 @@ function weightedDistanceMatching(pose1, pose2) {
         Math.abs(vector1PoseY[i] - vector2PoseY[i]));
   }
 
-  const weightedDistance = (1 / vector1ConfidenceSum) * summation2;
+  const weightedDistance = 1 / vector1ConfidenceSum * summation2;
   //console.log(weightedDistance);
 
   return weightedDistance;
@@ -558,8 +558,8 @@ function detectPoseInRealTime(video, net) {
 
               // send API
               const data = {
-                colorHist: 11,
-                pos: { lat: 48.263147, lng: 11.670846 }
+                colorHist,
+                pos: state.pos
               };
               postData(
                 `http://localhost:3000/waitingPassenger`,
