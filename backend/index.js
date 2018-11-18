@@ -10,7 +10,6 @@ const cario = socketio(http, {
   serveClient: false
 });
 
-
 const cors = require("cors");
 const bodyParser = require("body-parser");
 
@@ -71,18 +70,6 @@ app.post("/waitingPassenger", (req, res) => {
   res.sendStatus(200);
 });
 
-app.post("/status", (req, res) => {
-  const carStatus = MakeCarStatus(req.body);
-
-  if (!carStatus) {
-    res.send(500, "Malformed Car State Update...");
-    return;
-  }
-
-  state.carStatuses.push(carStatus);
-  res.sendStatus(200);
-});
-
 // Websocketzeug
 
 controllio.on("connection", function(socket) {
@@ -134,25 +121,25 @@ cario.on("connection", function(socket) {
 http.listen(3000, function() {
   console.log("websocket listening on 3000");
 
-  let newCarStatus = MakeCarStatus({
-    carId: 0,
-    pos: { lat: 48.1347975, lng: 11.5424506 }
-  });
-  state.carStatuses.push(newCarStatus);
-  newCarStatus = MakeCarStatus({
-    carId: 1,
-    pos: { lat: 48.1288533, lng: 11.5811703 }
-  });
-  state.carStatuses.push(newCarStatus);
+  // let newCarStatus = MakeCarStatus({
+  //   carId: 0,
+  //   pos: { lat: 48.1347975, lng: 11.5424506 }
+  // });
+  // state.carStatuses.push(newCarStatus);
+  // newCarStatus = MakeCarStatus({
+  //   carId: 1,
+  //   pos: { lat: 48.1288533, lng: 11.5811703 }
+  // });
+  // state.carStatuses.push(newCarStatus);
 
-  const passenger = MakeWaitingPassenger({
-    colorHist: 123,
-    pos: {
-      lat: 48.154145,
-      lng: 11.558108
-    }
-  });
-  state.waitingPassengers.push(passenger);
+  // const passenger = MakeWaitingPassenger({
+  //   colorHist: 123,
+  //   pos: {
+  //     lat: 48.154145,
+  //     lng: 11.558108
+  //   }
+  // });
+  // state.waitingPassengers.push(passenger);
 });
 
 const tellCabToGetPassenger = function(cabId, passenger) {
@@ -237,8 +224,8 @@ const checkWaitingPassengers = function() {
         }
       });
 
-    console.log("min dist: " + minDist);
-    console.log("best car: " + bestCabId);
+    // console.log("min dist: " + minDist);
+    // console.log("best car: " + bestCabId); // asdf
 
     // tell cab to get passenger
     if (bestCabId !== -1) {
