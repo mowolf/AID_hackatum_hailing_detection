@@ -32,8 +32,6 @@ socket.on("pickup", payload => {
   console.log("passenger", payload);
 });
 
-socket.emit("status", {state: "FREE", pos: { lat: 48.263147, lng: 11.670846 }});
-
 import { drawBoundingBox, drawKeypoints, drawSkeleton } from "./demo_util";
 
 const videoWidth = 600;
@@ -384,18 +382,21 @@ function detectPoseInRealTime(video, net) {
           switchBool = !switchBool;
           if (switchBool) {
             new Audio(nextMP3).play();
+
+            // send API
+            const data = {colorHist: 11, pos: {lat: 48.263147, lng: 11.670846}};
+            postData(`http://localhost:3000/waitingPassenger`, JSON.stringify(data))
+                .then(data => console.log("POST REQUEST SENT TO API")) // JSON-string from `response.json()` call
+                .catch(error => console.error(error));
+
           } else {
             new Audio(rightMP3).play();
+            socket.emit("status", {state: "BUSY", pos: { lat: 48.263147, lng: 11.670846 }});
           }
+
           // timeout for API
           d = new Date();
           lastCallTime = d.getTime();
-
-          // send API
-          const data = {colorHist: 11, pos: {lat: 48.263147, lng: 11.670846}};
-          postData(`http://localhost:3000/waitingPassenger`, JSON.stringify(data))
-              .then(data => console.log("POST REQUEST SENT TO API")) // JSON-string from `response.json()` call
-              .catch(error => console.error(error));
 
           // show visuals
           document.getElementById('detection').style.display = 'block';
